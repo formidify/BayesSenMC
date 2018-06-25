@@ -2,10 +2,11 @@
 % Please edit documentation in R/models.R
 \name{nonDiffOR}
 \alias{nonDiffOR}
-\title{Model with differential misclassification with Se0, Se1, Sp0, and Sp1 to be four-variate logit-transformed rescaled normal distributions}
+\title{Model with differential misclassification}
 \usage{
 nonDiffOR(a, N1, c, N0, mu, varz, z,
-  name = "Model with differential classification")
+  name = "Model with differential classification", traceplot = FALSE,
+  inc_warmup = FALSE, window = NULL, ...)
 }
 \arguments{
 \item{a}{# of exposed subjects in the case group.}
@@ -24,19 +25,38 @@ nonDiffOR(a, N1, c, N0, mu, varz, z,
 
 \item{name}{a string of the name of the model. Default to "Model with differential misclassification".}
 
+\item{traceplot}{Logical, defaulting to \code{FALSE}. If \code{TRUE} it will draw the 
+\code{\href{https://mc-stan.org/rstan/reference/stanfit-method-traceplot.html}{traceplot}} corresponding to one or more Markov chains.}
+
+\item{inc_warmup}{Only evaluated when \code{traceplot = TRUE}. \code{TRUE} or \code{FALSE}, indicating whether or not to include the warmup sample in the
+traceplot; defaults to \code{FALSE}.}
+
+\item{window}{Only evaluated when \code{traceplot = TRUE}. A vector of length 2. Iterations between \code{window[1]} and \code{window[2]} will be shown in the plot. 
+The default shows all iterations if \code{inc_warmup} is \code{TRUE} and all iterations from the sampling period only if \code{inc_warmup} is \code{FALSE}. 
+If \code{inc_warmup} is \code{FALSE} the iterations specified in \code{window} do not include iterations from the warmup period.
+The default number of iterations is 2000 unless otherwise specified in the optional \code{iter} argument.}
+
+\item{...}{optional parameters passed to \code{\href{https://www.rdocumentation.org/packages/rstan/versions/2.17.3/topics/stan}{stan}}.}
+
 \item{mx0}{normal distribution of X0 with (mx0, varx0).}
 
 \item{mx1}{conditional distribution of X1 with (mx1, varx1).}
 }
 \value{
-It returns a stanfit object of this model, which inherits stanfit class methods. See http://mc-stan.org/rstan/reference/stanfit-class.html for more details.
+It returns a stanfit object of this model, which inherits stanfit class methods. See
+\code{\href{https://mc-stan.org/rstan/reference/stanfit-class.html}{here}} for more details.
 }
 \description{
-This function generates a posterior distribution of corrected odds ratio given nondifferential misclassification with Se=0.5+0.5*expit(X) and Sp=0.5+0.5*expit(Y), where X and Y are independently distributed, and Se and Sp are correlated and the correlation is a random variable, which is equal to 0.5*[In(1+Z)-In(1-Z)] with a normally distributed Z.
+Generate a stanfit object corresponding to a posterior distribution of corrected odds ratio given a four-variate differential misclassification that extends from the logit model.
 }
 \examples{
 nonDiffOR(a = 126, N1 = 218, c = 71, N0 = 295, mu = c(2.76, 2.76, 3.58, 3.58),
-varz = c(0.9100002, 0.8190002, -0.5053286, -0.5053286, 0.8190002, 0.9100002,
--0.5053286, -0.5053286, -0.5053286, -0.5053286, 0.7300000, 0.6570000,
--0.5053286, -0.5053286, 0.6570000, 0.7300000), z = c(2.76, 2.76, 3.58, 3.58))
+  varz = c(0.9100002, 0.8190002, -0.5053286, -0.5053286, 0.8190002, 0.9100002,
+  -0.5053286, -0.5053286, -0.5053286, -0.5053286, 0.7300000, 0.6570000,
+  -0.5053286, -0.5053286, 0.6570000, 0.7300000), z = c(2.76, 2.76, 3.58, 3.58), chains = 3, iter = 10000)
+
+nonDiffOR(a = 126, N1 = 218, c = 71, N0 = 295, mu = c(2.76, 2.76, 3.58, 3.58),
+  varz = c(0.9100002, 0.8190002, -0.5053286, -0.5053286, 0.8190002, 0.9100002,
+  -0.5053286, -0.5053286, -0.5053286, -0.5053286, 0.7300000, 0.6570000,
+  -0.5053286, -0.5053286, 0.6570000, 0.7300000), z = c(2.76, 2.76, 3.58, 3.58), traceplot = TRUE, window = c(1, 1000))
 }

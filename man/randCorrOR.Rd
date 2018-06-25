@@ -2,10 +2,11 @@
 % Please edit documentation in R/models.R
 \name{randCorrOR}
 \alias{randCorrOR}
-\title{Model that extends the logit model but allows a random correlation between Sentivity and Specificity, i.e., a Fisher's Z-transformed normal distribution is allowed for the correlation}
+\title{Model with nondifferential, randomly correlated misclassification}
 \usage{
 randCorrOR(a, N1, c, N0, mx0, mx1, varx0, varx1, x0, x1, z, mz, varz,
-  name = "Model with random correlation")
+  name = "Model with random correlation", traceplot = FALSE,
+  inc_warmup = FALSE, window = NULL, ...)
 }
 \arguments{
 \item{a}{# of exposed subjects in the case group.}
@@ -35,14 +36,31 @@ randCorrOR(a, N1, c, N0, mx0, mx1, varx0, varx1, x0, x1, z, mz, varz,
 \item{varz}{normal distribution of Z with (mz, varz).}
 
 \item{name}{a string of the name of the model. Default to "Model with random correlation".}
+
+\item{traceplot}{Logical, defaulting to \code{FALSE}. If \code{TRUE} it will draw the 
+\code{\href{https://mc-stan.org/rstan/reference/stanfit-method-traceplot.html}{traceplot}} corresponding to one or more Markov chains.}
+
+\item{inc_warmup}{Only evaluated when \code{traceplot = TRUE}. \code{TRUE} or \code{FALSE}, indicating whether or not to include the warmup sample in the
+traceplot; defaults to \code{FALSE}.}
+
+\item{window}{Only evaluated when \code{traceplot = TRUE}. A vector of length 2. Iterations between \code{window[1]} and \code{window[2]} will be shown in the plot. 
+The default shows all iterations if \code{inc_warmup} is \code{TRUE} and all iterations from the sampling period only if \code{inc_warmup} is \code{FALSE}. 
+If \code{inc_warmup} is \code{FALSE} the iterations specified in \code{window} do not include iterations from the warmup period.
+The default number of iterations is 2000 unless otherwise specified in the optional \code{iter} argument.}
+
+\item{...}{optional parameters passed to \code{\href{https://www.rdocumentation.org/packages/rstan/versions/2.17.3/topics/stan}{stan}}.}
 }
 \value{
-It returns a stanfit object of this model, which inherits stanfit class methods. See http://mc-stan.org/rstan/reference/stanfit-class.html for more details.
+It returns a stanfit object of this model, which inherits stanfit class methods. See
+\code{\href{https://mc-stan.org/rstan/reference/stanfit-class.html}{here}} for more details.
 }
 \description{
-This function generates a posterior distribution of corrected odds ratio given nondifferential misclassification with Se=0.5+0.5*expit(X) and Sp=0.5+0.5*expit(Y), where X and Y are independently distributed, and Se and Sp are correlated and the correlation is a random variable, which is equal to 0.5*[In(1+Z)-In(1-Z)] with a normally distributed Z.
+Generate a stanfit object corresponding to a posterior distribution of corrected odds ratio given nondifferential misclassification that extends from the logit model but allows a random correlation between Sensitivity and Specificity.
 }
 \examples{
 randCorrOR(a = 126, N1 = 218, c = 71, N0 = 295, mx0 = 1.9814, mx1 = 2.8586, varx0 = 0.9872,
-varx1 = 0.5806, x0 = 1.9814, x1 = 2.8586, z = -0.7366, mz = -0.725, varz = 0.25)
+  varx1 = 0.5806, x0 = 1.9814, x1 = 2.8586, z = -0.7366, mz = -0.725, varz = 0.25, chains = 3, iter = 10000)
+
+randCorrOR(a = 126, N1 = 218, c = 71, N0 = 295, mx0 = 1.9814, mx1 = 2.8586, varx0 = 0.9872,
+  varx1 = 0.5806, x0 = 1.9814, x1 = 2.8586, z = -0.7366, mz = -0.725, varz = 0.25, traceplot = TRUE, window = c(1, 1000))
 }

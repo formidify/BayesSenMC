@@ -2,9 +2,10 @@
 % Please edit documentation in R/models.R
 \name{crudeOR}
 \alias{crudeOR}
-\title{Model with nondifferential classification with constant Sentivity and Specificity}
+\title{Model with constant nondifferential classification}
 \usage{
-crudeOR(a, N1, c, N0, se, sp, name = "Crude Model")
+crudeOR(a, N1, c, N0, se, sp, name = "Crude Model", traceplot = FALSE,
+  inc_warmup = FALSE, window = NULL, ...)
 }
 \arguments{
 \item{a}{# of exposed subjects in the case group.}
@@ -20,13 +21,29 @@ crudeOR(a, N1, c, N0, se, sp, name = "Crude Model")
 \item{sp}{specificity}
 
 \item{name}{a string of the name of the model. Default to "Crude Model".}
+
+\item{traceplot}{Logical, defaulting to \code{FALSE}. If \code{TRUE} it will draw the 
+\code{\href{https://mc-stan.org/rstan/reference/stanfit-method-traceplot.html}{traceplot}} corresponding to one or more Markov chains.}
+
+\item{inc_warmup}{Only evaluated when \code{traceplot = TRUE}. \code{TRUE} or \code{FALSE}, indicating whether or not to include the warmup sample in the
+traceplot; defaults to \code{FALSE}.}
+
+\item{window}{Only evaluated when \code{traceplot = TRUE}. A vector of length 2. Iterations between \code{window[1]} and \code{window[2]} will be shown in the plot. 
+The default shows all iterations if \code{inc_warmup} is \code{TRUE} and all iterations from the sampling period only if \code{inc_warmup} is \code{FALSE}. 
+If \code{inc_warmup} is \code{FALSE} the iterations specified in \code{window} do not include iterations from the warmup period.
+The default number of iterations is 2000 unless otherwise specified in the optional \code{iter} argument.}
+
+\item{...}{optional parameters passed to \code{\href{https://www.rdocumentation.org/packages/rstan/versions/2.17.3/topics/stan}{stan}}.}
 }
 \value{
-It returns a stanfit object of this model, which inherits stanfit class methods. See http://mc-stan.org/rstan/reference/stanfit-class.html for more details.
+It returns a stanfit object of this model, which inherits stanfit class methods. See
+\code{\href{https://mc-stan.org/rstan/reference/stanfit-class.html}{here}} for more details.
 }
 \description{
-This function generates a posterior distribution of corrected odds ratio given nondifferential misclassification with constant Se and Sp.
+Generate a stanfit object corresponding to a posterior distribution of corrected odds ratio given nondifferential misclassification with constant Se and Sp.
 }
 \examples{
-crudeOR(a = 126, N1 = 218, c = 71, N0 = 295, se = 0.94, sp = 0.97)
+crudeOR(a = 126, N1 = 218, c = 71, N0 = 295, se = 0.94, sp = 0.97, chains = 3, iter = 10000)
+
+crudeOR(a = 126, N1 = 218, c = 71, N0 = 295, se = 0.94, sp = 0.97, traceplot = TRUE, window = c(1, 1000))
 }

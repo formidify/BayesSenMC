@@ -12,7 +12,6 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: true
 Imports:  
-    gridExtra,
     ggplot2,
     Rcpp (>= 0.12.12),
     rstan (>= 2.16.2)

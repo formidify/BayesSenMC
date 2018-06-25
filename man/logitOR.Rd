@@ -2,9 +2,10 @@
 % Please edit documentation in R/models.R
 \name{logitOR}
 \alias{logitOR}
-\title{Model with nondifferential misclassification with Sentivity and Specificity each under a logit-transformed scaled bivariate normal distribution}
+\title{Model with nondifferential distributed misclassification (logit model)}
 \usage{
-logitOR(a, N1, c, N0, mx, my, varx, vary, x, y, name = "Logit Model")
+logitOR(a, N1, c, N0, mx, my, varx, vary, x, y, name = "Logit Model",
+  traceplot = FALSE, inc_warmup = FALSE, window = NULL, ...)
 }
 \arguments{
 \item{a}{# of exposed subjects in the case group.}
@@ -28,14 +29,31 @@ logitOR(a, N1, c, N0, mx, my, varx, vary, x, y, name = "Logit Model")
 \item{y}{used as an initial value of Y.}
 
 \item{name}{a string of the name of the model. Default to "Logit Model".}
+
+\item{traceplot}{Logical, defaulting to \code{FALSE}. If \code{TRUE} it will draw the 
+\code{\href{https://mc-stan.org/rstan/reference/stanfit-method-traceplot.html}{traceplot}} corresponding to one or more Markov chains.}
+
+\item{inc_warmup}{Only evaluated when \code{traceplot = TRUE}. \code{TRUE} or \code{FALSE}, indicating whether or not to include the warmup sample in the
+traceplot; defaults to \code{FALSE}.}
+
+\item{window}{Only evaluated when \code{traceplot = TRUE}. A vector of length 2. Iterations between \code{window[1]} and \code{window[2]} will be shown in the plot. 
+The default shows all iterations if \code{inc_warmup} is \code{TRUE} and all iterations from the sampling period only if \code{inc_warmup} is \code{FALSE}. 
+If \code{inc_warmup} is \code{FALSE} the iterations specified in \code{window} do not include iterations from the warmup period.
+The default number of iterations is 2000 unless otherwise specified in the optional \code{iter} argument.}
+
+\item{...}{optional parameters passed to \code{\href{https://www.rdocumentation.org/packages/rstan/versions/2.17.3/topics/stan}{stan}}.}
 }
 \value{
-It returns a stanfit object of this model, which inherits stanfit class methods. See http://mc-stan.org/rstan/reference/stanfit-class.html for more details.
+It returns a stanfit object of this model, which inherits stanfit class methods. See
+\code{\href{https://mc-stan.org/rstan/reference/stanfit-class.html}{here}} for more details.
 }
 \description{
-This function generates a posterior distribution of corrected odds ratio given nondifferential misclassification with Se=0.5+0.5*expit(X) and Sp=0.5+0.5*expit(Y), where X and Y are independently distributed.
+Generate a stanfit object corresponding to a posterior distribution of corrected odds ratio given nondifferential misclassification under a logit-transformed scaled bivariate normal distribution.
 }
 \examples{
 logitOR(a = 126, N1 = 218, c = 71, N0 = 295, mx = 1.9814, my = 2.8586,
-varx = 0.9872, vary = 0.5806, x = 2.76, y = 3.58)
+  varx = 0.9872, vary = 0.5806, x = 2.76, y = 3.58, chains = 3, iter = 10000)
+
+logitOR(a = 126, N1 = 218, c = 71, N0 = 295, mx = 1.9814, my = 2.8586,
+  varx = 0.9872, vary = 0.5806, x = 2.76, y = 3.58, traceplot = TRUE, window = c(1, 1000))
 }
