@@ -24,9 +24,9 @@ logitOR(a, N1, c, N0, mx, my, varx, vary, x, y, name = "Logit Model",
 
 \item{vary}{normal distribution of Y with (mY, varY).}
 
-\item{x}{used as an initial value of X.}
+\item{x}{used as an initial value for X.}
 
-\item{y}{used as an initial value of Y.}
+\item{y}{used as an initial value for Y.}
 
 \item{name}{a string of the name of the model. Default to "Logit Model".}
 

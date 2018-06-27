@@ -23,7 +23,7 @@ randCorrOR(a, N1, c, N0, mx0, mx1, varx0, varx1, x0, x1, z, mz, varz,
 
 \item{varx0}{normal distribution of X0 with (mx0, varx0).}
 
-\item{varx1}{conditional normal distribution of X1 with (mx1, varx1).}
+\item{varx1}{conditional distribution of X1 with (mx1, varx1).}
 
 \item{x0}{used as an initial value of X0.}
 

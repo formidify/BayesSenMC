@@ -140,8 +140,8 @@ crudeOR <- function(a, N1, c, N0, se, sp, name = "Crude Model", traceplot = FALS
 #' @param my normal distribution of Y with (mY, varY).
 #' @param varx normal distribution of X with (mX, varX).
 #' @param vary normal distribution of Y with (mY, varY).
-#' @param x used as an initial value of X.
-#' @param y used as an initial value of Y.
+#' @param x used as an initial value for X.
+#' @param y used as an initial value for Y.
 #' @param name a string of the name of the model. Default to "Logit Model".
 #' @param traceplot Logical, defaulting to \code{FALSE}. If \code{TRUE} it will draw the 
 #' \code{\href{https://mc-stan.org/rstan/reference/stanfit-method-traceplot.html}{traceplot}} corresponding to one or more Markov chains.
@@ -224,12 +224,12 @@ logitOR <- function(a, N1, c, N0, mx, my, varx, vary, x, y, name = "Logit Model"
 #' @param N1 # of total subjects in the case group.
 #' @param c # of exposed subjects in the control group.
 #' @param N0 # of total subjects in the control group.
-#' @param mx0 normal distribution of X0 with (mx0, varx0)
-#' @param mx1 conditional distribution of X1 with (mx1, varx1)
-#' @param varx0 normal distribution of X0 with (mx0, varx0)
-#' @param varx1 conditional normal distribution of X1 with (mx1, varx1)
-#' @param x0 used as an initial value of X0
-#' @param x1 used as an initial value of X1
+#' @param mx0 normal distribution of X0 with (mx0, varx0).
+#' @param mx1 conditional distribution of X1 with (mx1, varx1).
+#' @param varx0 normal distribution of X0 with (mx0, varx0).
+#' @param varx1 conditional distribution of X1 with (mx1, varx1)
+#' @param x0 used as an initial value for X0
+#' @param x1 used as an initial value for X1
 #' @param rhose correlation between Se and Sp
 #' @param name a string of the name of the model. Default to "Model with fixed correlation".
 #' @param traceplot Logical, defaulting to \code{FALSE}. If \code{TRUE} it will draw the 
@@ -322,7 +322,7 @@ fixedCorrOR <- function(a, N1, c, N0, mx0, mx1, varx0, varx1, x0, x1, rhose, nam
 #' @param mx0 normal distribution of X0 with (mx0, varx0).
 #' @param mx1 conditional distribution of X1 with (mx1, varx1).
 #' @param varx0 normal distribution of X0 with (mx0, varx0).
-#' @param varx1 conditional normal distribution of X1 with (mx1, varx1).
+#' @param varx1 conditional distribution of X1 with (mx1, varx1).
 #' @param x0 used as an initial value of X0.
 #' @param x1 used as an initial value of X1.
 #' @param z used as an initial value of Z, where correlation (rhoSe) = (exp(2*z)-1)/(1+exp(2*z))).

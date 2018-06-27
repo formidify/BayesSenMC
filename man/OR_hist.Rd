@@ -4,12 +4,13 @@
 \alias{OR_hist}
 \title{Plot Model}
 \usage{
-OR_hist(model, a, N1, c, N0, se, sp, binwidth = 0.25, fill = "gray", ...)
+OR_hist(model, a, N1, c, N0, se = 1, sp = 1, binwidth = 0.25,
+  fill = "gray", ...)
 }
 \arguments{
 \item{model}{A stanfit object.}
 
-\item{a}{# of exposed subjects in the case group. Along with N1, c, N0, se and sp, they are used to plot models with no misclassification and constant misclassification.}
+\item{a}{# of exposed subjects in the case group. Along with N1, c, N0, se and sp, they are used to plot probability density with no misclassification and constant misclassification as a comparison.}
 
 \item{N1}{# of total subjects in the case group.}
 
@@ -17,9 +18,9 @@ OR_hist(model, a, N1, c, N0, se, sp, binwidth = 0.25, fill = "gray", ...)
 
 \item{N0}{# of total subjects in the control group.}
 
-\item{se}{sensitivity}
+\item{se}{sensitivity. Default to 1. If no other values are specified for either se or sp, then only the density curve of corrected model will be drawn.}
 
-\item{sp}{specificity}
+\item{sp}{specificity. Default to 1.}
 
 \item{binwidth}{default to \code{0.25}}
 
