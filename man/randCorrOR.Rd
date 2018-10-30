@@ -4,9 +4,11 @@
 \alias{randCorrOR}
 \title{Model with nondifferential, randomly correlated misclassification}
 \usage{
-randCorrOR(a, N1, c, N0, mx0, mx1, varx0, varx1, x0, x1, z, mz, varz,
-  name = "Model with random correlation", traceplot = FALSE,
-  inc_warmup = FALSE, window = NULL, ...)
+randCorrOR(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se = NULL,
+  lg.sp = NULL, m.z, s.z, z = NULL,
+  name = "Logit Model with Random Correlation", chains = 2,
+  traceplot = FALSE, inc_warmup = FALSE, window = NULL, refresh = 0,
+  seed = NA, ...)
 }
 \arguments{
 \item{a}{# of exposed subjects in the case group.}
@@ -17,28 +19,30 @@ randCorrOR(a, N1, c, N0, mx0, mx1, varx0, varx1, x0, x1, z, mz, varz,
 
 \item{N0}{# of total subjects in the control group.}
 
-\item{mx0}{normal distribution of X0 with (mx0, varx0).}
+\item{m.lg.se}{normal distribution of logit Se with (mean = m.lg.se, sd = s.lg.se).}
 
-\item{mx1}{conditional distribution of X1 with (mx1, varx1).}
+\item{m.lg.sp}{conditional normal distribution of logit Sp given Se with (m.lg.sp, s.lg.sp).}
 
-\item{varx0}{normal distribution of X0 with (mx0, varx0).}
+\item{s.lg.se}{standard deviation of logit Se}
 
-\item{varx1}{conditional distribution of X1 with (mx1, varx1).}
+\item{s.lg.sp}{standard deviation of logit Sp}
 
-\item{x0}{used as an initial value of X0.}
+\item{lg.se}{used as an initial value for logit Se. Default to m.lg.se}
 
-\item{x1}{used as an initial value of X1.}
+\item{lg.sp}{used as an initial value for logit Sp. Default to m.lg.sp}
 
-\item{z}{used as an initial value of Z, where correlation (rhoSe) = (exp(2*z)-1)/(1+exp(2*z))).}
+\item{m.z}{normal distribution of Z with (mean = m.z, sd = s.z).}
 
-\item{mz}{normal distribution of Z with (mz, varz).}
+\item{s.z}{normal distribution of Z with (mean = m.z, sd = s.z).}
 
-\item{varz}{normal distribution of Z with (mz, varz).}
+\item{z}{used as an initial value of Fisher's Z transformed of rho, where correlation rho = (exp(2*z)-1)/(1+exp(2*z))).}
 
-\item{name}{a string of the name of the model. Default to "Model with random correlation".}
+\item{name}{a string of the name of the model. Default to "Logit Model with Random Correlation".}
+
+\item{chains}{number of Markov Chains. Default to 2.}
 
 \item{traceplot}{Logical, defaulting to \code{FALSE}. If \code{TRUE} it will draw the 
-\code{\href{https://mc-stan.org/rstan/reference/stanfit-method-traceplot.html}{traceplot}} corresponding to one or more Markov chains.}
+\href{https://mc-stan.org/rstan/reference/stanfit-method-traceplot.html}{traceplot} corresponding to one or more Markov chains.}
 
 \item{inc_warmup}{Only evaluated when \code{traceplot = TRUE}. \code{TRUE} or \code{FALSE}, indicating whether or not to include the warmup sample in the
 traceplot; defaults to \code{FALSE}.}
@@ -48,19 +52,29 @@ The default shows all iterations if \code{inc_warmup} is \code{TRUE} and all ite
 If \code{inc_warmup} is \code{FALSE} the iterations specified in \code{window} do not include iterations from the warmup period.
 The default number of iterations is 2000 unless otherwise specified in the optional \code{iter} argument.}
 
-\item{...}{optional parameters passed to \code{\href{https://www.rdocumentation.org/packages/rstan/versions/2.17.3/topics/stan}{stan}}.}
+\item{refresh}{an integer value used to control how often the progress of sampling is reported. By default, the progress indicator is turned off, thus refresh <= 0.
+If on, refresh = max(iter/10, 1) is generally recommended.}
+
+\item{seed}{the seed for random number generation. See \href{https://www.rdocumentation.org/packages/rstan/versions/2.17.3/topics/stan}{stan} for more details.}
+
+\item{...}{optional parameters passed to \href{https://www.rdocumentation.org/packages/rstan/versions/2.17.3/topics/stan}{stan}.}
 }
 \value{
 It returns a stanfit object of this model, which inherits stanfit class methods. See
-\code{\href{https://mc-stan.org/rstan/reference/stanfit-class.html}{here}} for more details.
+\href{https://mc-stan.org/rstan/reference/stanfit-class.html}{here} for more details.
 }
 \description{
 Generate a stanfit object corresponding to a posterior distribution of corrected odds ratio given nondifferential misclassification that extends from the logit model but allows a random correlation between Sensitivity and Specificity.
 }
 \examples{
-randCorrOR(a = 126, N1 = 218, c = 71, N0 = 295, mx0 = 1.9814, mx1 = 2.8586, varx0 = 0.9872,
-  varx1 = 0.5806, x0 = 1.9814, x1 = 2.8586, z = -0.7366, mz = -0.725, varz = 0.25, chains = 3, iter = 10000)
+# Case-control study data of Bipolar Disorder with rheumatoid arthritis (Farhi et al. 2016)
+# Data from \\url{https://www.sciencedirect.com/science/article/pii/S0165032715303864#bib13}
 
-randCorrOR(a = 126, N1 = 218, c = 71, N0 = 295, mx0 = 1.9814, mx1 = 2.8586, varx0 = 0.9872,
-  varx1 = 0.5806, x0 = 1.9814, x1 = 2.8586, z = -0.7366, mz = -0.725, varz = 0.25, traceplot = TRUE, window = c(1, 1000))
+randCorrOR(a = 66, N1 = 11782, c = 243, N0 = 57973, m.lg.se = 1.069, m.lg.sp = 1.126,
+  s.lg.se = 0.893, s.lg.sp = 0.712, m.z = -0.399, s.z = 0.139, chains = 3, 
+  iter = 10000, seed = 0)
+
+randCorrOR(a = 66, N1 = 11782, c = 243, N0 = 57973, m.lg.se = 1.069, m.lg.sp = 1.126,
+  s.lg.se = 0.893, s.lg.sp = 0.712, lg.se = 2.197, lg.sp = 0.744, m.z = -0.399, 
+  s.z = 0.139, traceplot = TRUE)
 }

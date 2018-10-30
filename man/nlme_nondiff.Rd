@@ -8,18 +8,18 @@ nlme_nondiff(data, lower = 0.5, upper = 1, ...)
 }
 \arguments{
 \item{data}{a data frame containing the 2 by 2 data of the diagnostics table of exposure status for every study in a meta-analysis.
-There are 4 columns in the data (\code{n_11} indicates the true positives, \code{n_11} the false negatives,
-\code{n_00} the true negatives and \code{n_01} the false negatives). Each column is a vector of same length,
+It contains at least 4 columns in the data named as following: \code{TP} indicates the true positives, \code{FN} the false negatives,
+\code{TN} the true negatives and \code{FN} the false negatives. Each column is a vector of same length,
 which is the number of meta-analysis study results used in the model.}
 
-\item{lower}{an optional argument specifying the lower bound assumption of Se and Sp. Default to 0.5, which provides the mild assumption that it is better than chance.}
+\item{lower}{an optional argument specifying the lower bound assumption of Se and Sp. Default to 0.5, which provides the mild assumption that Se and Sp are better than chance.}
 
 \item{upper}{an optional argument specifying the upper bound assumption of Se and Sp. Default to 1.}
 
-\item{...}{optional parameters passed to \code{\href{https://www.rdocumentation.org/packages/lme4/versions/1.1-18-1/topics/glmer}{glmer}}.}
+\item{...}{optional parameters passed to \href{https://www.rdocumentation.org/packages/lme4/versions/1.1-18-1/topics/glmer}{glmer}.}
 }
 \value{
-It returns an object of class \code{\href{https://www.rdocumentation.org/packages/lme4/versions/1.1-18-1/topics/merMod-class}{mermod}}. 
+It returns an object of class \href{https://www.rdocumentation.org/packages/lme4/versions/1.1-18-1/topics/merMod-class}{mermod}. 
 Besides generic class methods, \code{paramEst()} is implemented in \code{BayesSenMC} to get the parameter estimates used in the Bayesian misclassification model functions.
 }
 \description{
@@ -27,10 +27,8 @@ Fit a bivariate generalized linear mixed-effects model (GLMM) for non-differenti
 Lower and upper bounds for Se and Sp can be specified according to the assumptions of the study.
 }
 \examples{
-raw <- data.frame(n11 = c(59, 312, 177, 149, 213, 214, 126, 115, 1357, 19),
-n10 = c(5, 24, 4, 8, 47, 0, 11, 7, 185, 2),
-n00 = c(227, 594, 178, 370, 76, 20, 181, 179, 3322, 96),
-n01 = c(5, 45, 9, 15, 2, 2, 0, 2, 68, 1))
+data(bd_meta)
 
-mod <- nlme_nondiff(raw, lower = 0)
+mod <- nlme_nondiff(bd_meta, lower = 0)
+summary(mod) 
 }

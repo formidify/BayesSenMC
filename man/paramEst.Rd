@@ -2,7 +2,7 @@
 % Please edit documentation in R/nlmeNDiff.R
 \name{paramEst}
 \alias{paramEst}
-\title{Model without misclassification}
+\title{Parameter estimates of the GLMM model}
 \usage{
 paramEst(model)
 }
@@ -12,13 +12,15 @@ paramEst(model)
 \value{
 It returns a list of parameter estimates which can be input into the Bayesian model functions in
 \code{BayesSenMC}. \code{(mean_logSe, var_logSe)} and \code{(mean_logSp, var_logSp)} are the logit prior distributions for Se and Sp.
-\code{Se} and \code{Sp} are the corresponding mean values given the logit prior means. \rho is the correlation estimate between Se and
+\code{Se} and \code{Sp} are the corresponding mean values given the logit prior means. \code{rho} is the correlation estimate between Se and
 Sp. \code{fisher_mean} is the Fisher's mean of the correlation assume a Fisher's distribution.
 }
 \description{
-Generate a stanfit object corresponding to a posterior distribution of uncorrected odds ratio given no misclassification.
+Get parameter estimates of the GLMM model to plug into modeling functions in \code{BayesSenMC} for Bayesian inference of adjusted odds ratio.
 }
 \examples{
-mod <- nlme_nondiff(raw) # see nlme_nondiff() for detailed example.
+data(bd_meta)
+
+mod <- nlme_nondiff(bd_meta, lower = 0) # see nlme_nondiff() for detailed example.
 pList <- paramEst(mod)
 }

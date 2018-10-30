@@ -2,10 +2,11 @@
 % Please edit documentation in R/models.R
 \name{crudeOR}
 \alias{crudeOR}
-\title{Model with constant nondifferential classification}
+\title{Model with constant nondifferential misclassification}
 \usage{
-crudeOR(a, N1, c, N0, se, sp, name = "Crude Model", traceplot = FALSE,
-  inc_warmup = FALSE, window = NULL, ...)
+crudeOR(a, N1, c, N0, se, sp, name = "Constant Misclassification Model",
+  chains = 2, traceplot = FALSE, inc_warmup = FALSE, window = NULL,
+  refresh = 0, seed = NA, ...)
 }
 \arguments{
 \item{a}{# of exposed subjects in the case group.}
@@ -20,10 +21,12 @@ crudeOR(a, N1, c, N0, se, sp, name = "Crude Model", traceplot = FALSE,
 
 \item{sp}{specificity}
 
-\item{name}{a string of the name of the model. Default to "Crude Model".}
+\item{name}{a string of the name of the model. Default to "Constant Misclassification Model".}
+
+\item{chains}{number of Markov Chains. Default to 2.}
 
 \item{traceplot}{Logical, defaulting to \code{FALSE}. If \code{TRUE} it will draw the 
-\code{\href{https://mc-stan.org/rstan/reference/stanfit-method-traceplot.html}{traceplot}} corresponding to one or more Markov chains.}
+\href{https://mc-stan.org/rstan/reference/stanfit-method-traceplot.html}{traceplot} corresponding to one or more Markov chains.}
 
 \item{inc_warmup}{Only evaluated when \code{traceplot = TRUE}. \code{TRUE} or \code{FALSE}, indicating whether or not to include the warmup sample in the
 traceplot; defaults to \code{FALSE}.}
@@ -33,17 +36,25 @@ The default shows all iterations if \code{inc_warmup} is \code{TRUE} and all ite
 If \code{inc_warmup} is \code{FALSE} the iterations specified in \code{window} do not include iterations from the warmup period.
 The default number of iterations is 2000 unless otherwise specified in the optional \code{iter} argument.}
 
-\item{...}{optional parameters passed to \code{\href{https://www.rdocumentation.org/packages/rstan/versions/2.17.3/topics/stan}{stan}}.}
+\item{refresh}{an integer value used to control how often the progress of sampling is reported. By default, the progress indicator is turned off, thus refresh <= 0.
+If on, refresh = max(iter/10, 1) is generally recommended.}
+
+\item{seed}{the seed for random number generation. See \href{https://www.rdocumentation.org/packages/rstan/versions/2.17.3/topics/stan}{stan} for more details.}
+
+\item{...}{optional parameters passed to \href{https://www.rdocumentation.org/packages/rstan/versions/2.17.3/topics/stan}{stan}.}
 }
 \value{
 It returns a stanfit object of this model, which inherits stanfit class methods. See
-\code{\href{https://mc-stan.org/rstan/reference/stanfit-class.html}{here}} for more details.
+\href{https://mc-stan.org/rstan/reference/stanfit-class.html}{here} for more details.
 }
 \description{
 Generate a stanfit object corresponding to a posterior distribution of corrected odds ratio given nondifferential misclassification with constant Se and Sp.
 }
 \examples{
-crudeOR(a = 126, N1 = 218, c = 71, N0 = 295, se = 0.94, sp = 0.97, chains = 3, iter = 10000)
+# Case-control study data of Bipolar Disorder with rheumatoid arthritis (Farhi et al. 2016)
+# Data from \\url{https://www.sciencedirect.com/science/article/pii/S0165032715303864#bib13}
+crudeOR(a = 66, N1 = 11782, c = 243, N0 = 57973, se = 0.744, sp = 0.755, chains = 3, 
+iter = 10000, seed = 0)
 
-crudeOR(a = 126, N1 = 218, c = 71, N0 = 295, se = 0.94, sp = 0.97, traceplot = TRUE, window = c(1, 1000))
+crudeOR(a = 66, N1 = 11782, c = 243, N0 = 57973, se = 0.744, sp = 0.755, traceplot = TRUE)
 }
