@@ -4,8 +4,8 @@
 \alias{OR_hist}
 \title{Plot Model}
 \usage{
-OR_hist(model, a, N1, c, N0, se = 1, sp = 1, x.min = 0, x.max = NULL,
-  y.max = NULL, binwidth = 0.25, fill = "gray", ...)
+OR_hist(model, a, N1, c, N0, se = 1, sp = 1, x.min = 0,
+  x.max = NULL, y.max = NULL, binwidth = 0.25, fill = "gray", ...)
 }
 \arguments{
 \item{model}{A stanfit object.}
@@ -44,6 +44,8 @@ Plot the posterior distribution of adjusted odds ratio given the stanfit object.
 \examples{
 # Case-control study data of Bipolar Disorder with rheumatoid arthritis (Farhi et al. 2016)
 # Data from \\url{https://www.sciencedirect.com/science/article/pii/S0165032715303864#bib13}
+
+library(ggplot2)
 
 my.mod <- randCorrOR(a = 66, N1 = 11782, c = 243, N0 = 57973, m.lg.se = 1.069, 
 m.lg.sp = 1.126, s.lg.se = 0.893, s.lg.sp = 0.712, m.z = -0.399, s.z = 0.139, 

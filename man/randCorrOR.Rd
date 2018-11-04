@@ -4,11 +4,11 @@
 \alias{randCorrOR}
 \title{Model with nondifferential, randomly correlated misclassification}
 \usage{
-randCorrOR(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se = NULL,
-  lg.sp = NULL, m.z, s.z, z = NULL,
+randCorrOR(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp,
+  lg.se = NULL, lg.sp = NULL, m.z, s.z, z = NULL,
   name = "Logit Model with Random Correlation", chains = 2,
-  traceplot = FALSE, inc_warmup = FALSE, window = NULL, refresh = 0,
-  seed = NA, ...)
+  traceplot = FALSE, inc_warmup = FALSE, window = NULL,
+  refresh = 0, seed = NA, ...)
 }
 \arguments{
 \item{a}{# of exposed subjects in the case group.}

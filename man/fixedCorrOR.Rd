@@ -4,9 +4,10 @@
 \alias{fixedCorrOR}
 \title{Model with nondifferential, correlated misclassification}
 \usage{
-fixedCorrOR(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se = NULL,
-  lg.sp = NULL, rho, name = "Logit Model with Fixed Correlation",
-  chains = 2, traceplot = FALSE, inc_warmup = FALSE, window = NULL,
+fixedCorrOR(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp,
+  lg.se = NULL, lg.sp = NULL, rho,
+  name = "Logit Model with Fixed Correlation", chains = 2,
+  traceplot = FALSE, inc_warmup = FALSE, window = NULL,
   refresh = 0, seed = NA, ...)
 }
 \arguments{

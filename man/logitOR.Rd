@@ -5,9 +5,9 @@
 \title{Model with nondifferential, logit normal-distributed misclassification}
 \usage{
 logitOR(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se = NULL,
-  lg.sp = NULL, name = "Logit Normal Misclassification Model", chains = 2,
-  traceplot = FALSE, inc_warmup = FALSE, window = NULL, refresh = 0,
-  seed = NA, ...)
+  lg.sp = NULL, name = "Logit Normal Misclassification Model",
+  chains = 2, traceplot = FALSE, inc_warmup = FALSE, window = NULL,
+  refresh = 0, seed = NA, ...)
 }
 \arguments{
 \item{a}{# of exposed subjects in the case group.}

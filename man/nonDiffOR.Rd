@@ -6,8 +6,8 @@
 \usage{
 nonDiffOR(a, N1, c, N0, mu, varz, z = NULL,
   name = "Model with differential classification", chains = 2,
-  traceplot = FALSE, inc_warmup = FALSE, window = NULL, refresh = 0,
-  seed = 0, ...)
+  traceplot = FALSE, inc_warmup = FALSE, window = NULL,
+  refresh = 0, seed = 0, ...)
 }
 \arguments{
 \item{a}{# of exposed subjects in the case group.}

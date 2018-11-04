@@ -5,8 +5,8 @@
 \title{Model without misclassification}
 \usage{
 correctedOR(a, N1, c, N0, name = "Corrected Model", chains = 2,
-  traceplot = FALSE, inc_warmup = FALSE, window = NULL, refresh = 0,
-  seed = NA, ...)
+  traceplot = FALSE, inc_warmup = FALSE, window = NULL,
+  refresh = 0, seed = NA, ...)
 }
 \arguments{
 \item{a}{# of exposed subjects in the case group.}

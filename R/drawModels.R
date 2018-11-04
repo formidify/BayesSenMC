@@ -18,10 +18,13 @@
 #' customized using the ggplot2 package.
 #' @import rstan
 #' @import ggplot2
+#' @importFrom stats dlnorm
 #' @export
 #' @examples
 #' # Case-control study data of Bipolar Disorder with rheumatoid arthritis (Farhi et al. 2016)
 #' # Data from \url{https://www.sciencedirect.com/science/article/pii/S0165032715303864#bib13}
+#' 
+#' library(ggplot2)
 #' 
 #' my.mod <- randCorrOR(a = 66, N1 = 11782, c = 243, N0 = 57973, m.lg.se = 1.069, 
 #' m.lg.sp = 1.126, s.lg.se = 0.893, s.lg.sp = 0.712, m.z = -0.399, s.z = 0.139, 
@@ -51,10 +54,10 @@ OR_hist <- function(model, a, N1, c, N0, se = 1, sp = 1, x.min = 0, x.max = NULL
   xx <- seq(x.min, x.max, 0.01)
   yy1 <- dlnorm(xx, log(ORadj), se.log.or)
 
-  y1 <- data.frame(x = xx, y = yy1)
+  y1 <- data.frame(xx, yy1)
 
   hist <- stan_hist(model, binwidth = binwidth, fill = fill, ...) +
-            geom_line(mapping = aes(x = x, y = y), data = y1, linetype = 1, colour = "black") 
+            geom_line(mapping = aes(x = xx, y = yy1), data = y1, linetype = 1, colour = "black") 
 
   if (!(se == 1 & sp == 1)) {
     # when se and sp are equal to user input values (crude OR)
@@ -65,9 +68,9 @@ OR_hist <- function(model, a, N1, c, N0, se = 1, sp = 1, x.min = 0, x.max = NULL
 
     yy2 <- dlnorm(xx, log(ORadj), se.log.or)
 
-    y2 <- data.frame(x = xx, y = yy2)
+    y2 <- data.frame(xx, yy2)
 
-    hist <- hist + geom_line(mapping = aes(x = x, y = y), data = y2, linetype = 2, colour = "black") +
+    hist <- hist + geom_line(mapping = aes(x = xx, y = yy2), data = y2, linetype = 2, colour = "black") +
               scale_linetype_manual(name = c("crude", "corrected"), values = c(2, 1), labels = c("crude", "corrected"))
   }
 

@@ -13,6 +13,7 @@
 #' Besides generic class methods, \code{paramEst()} is implemented in \code{BayesSenMC} to get the parameter estimates used in the Bayesian misclassification model functions. 
 #' @import lme4
 #' @import dplyr
+#' @importFrom stats binomial
 #' @export
 #' @examples
 #' data(bd_meta)
@@ -22,15 +23,19 @@
 
 nlme_nondiff <- function(data, lower = 0.5, upper = 1, ...) {
   
+  # to get rid of cran global not definied warning
+  N1 <- TP <- FN <- N0 <- TN <- FP <- a <- b <- Y <- N <- Se <- NULL
+  
   dat <- data %>% mutate(N1 = TP + FN,
                         N0 = TN + FP) %>%
     rename(a = TP, b = TN) %>%
-    select(a, b, N1, N0)
+    dplyr::select(a, b, N1, N0)
   
+  sid <- seq(1, nrow(dat))
   # Se = 1 represents sensitivity, otherwise specificity
   dat_final <- merge(
-    dat %>% mutate(sid = seq(1, nrow(dat)), Y = a, N = N1, Se = 1) %>% dplyr::select(sid, Y, N, Se),
-    dat %>% mutate(sid = seq(1, nrow(dat)), Y = b, N = N0, Se = 0) %>% dplyr::select(sid, Y, N, Se), all = TRUE
+    dat %>% mutate(sid, Y = a, N = N1, Se = 1) %>% select(sid, Y, N, Se),
+    dat %>% mutate(sid, Y = b, N = N0, Se = 0) %>% select(sid, Y, N, Se), all = TRUE
   )
   
   dat_final <- cbind(dat_final, as.numeric(dat_final$Se=='0'))
