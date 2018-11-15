@@ -12,7 +12,7 @@
 #' @return It returns an object of class \href{https://www.rdocumentation.org/packages/lme4/versions/1.1-18-1/topics/merMod-class}{mermod}. 
 #' Besides generic class methods, \code{paramEst()} is implemented in \code{BayesSenMC} to get the parameter estimates used in the Bayesian misclassification model functions. 
 #' @import lme4
-#' @import dplyr
+#' @importFrom dplyr mutate rename select %>%
 #' @importFrom stats binomial
 #' @export
 #' @examples
@@ -29,7 +29,7 @@ nlme_nondiff <- function(data, lower = 0.5, upper = 1, ...) {
   dat <- data %>% mutate(N1 = TP + FN,
                         N0 = TN + FP) %>%
     rename(a = TP, b = TN) %>%
-    dplyr::select(a, b, N1, N0)
+    select(a, b, N1, N0)
   
   sid <- seq(1, nrow(dat))
   # Se = 1 represents sensitivity, otherwise specificity

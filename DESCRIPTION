@@ -12,8 +12,8 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: true
 Imports: 
-	ggplot2,
 	dplyr,
+	ggplot2,
     rstan (>= 2.16.2),
     lme4,
 Depends: 
