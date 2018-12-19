@@ -8,6 +8,10 @@ paramEst(model)
 }
 \arguments{
 \item{model}{a GLMM model built with the \code{nlme_nondiff()} function.}
+
+\item{lower}{an optional argument matching the lower bound assumption of Se and Sp of the input \code{model}. Default to 0.5 as in \code{nlme_nondiff()}.}
+
+\item{upper}{an optional argument matching the upper bound assumption of Se and Sp. Default to 1 as in \code{nlme_nondiff()}.}
 }
 \value{
 It returns a list of parameter estimates which can be input into the Bayesian model functions in

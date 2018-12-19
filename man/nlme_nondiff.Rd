@@ -8,8 +8,8 @@ nlme_nondiff(data, lower = 0.5, upper = 1, ...)
 }
 \arguments{
 \item{data}{a data frame containing the 2 by 2 data of the diagnostics table of exposure status for every study in a meta-analysis.
-It contains at least 4 columns in the data named as following: \code{TP} indicates the true positives, \code{FN} the false negatives,
-\code{TN} the true negatives and \code{FN} the false negatives. Each column is a vector of same length,
+It contains at least 4 columns in the data named as following: \code{n11} indicates the true positives, \code{n01} the false positives,
+\code{n00} the true negatives and \code{n10} the false negatives. Each column is a vector of same length,
 which is the number of meta-analysis study results used in the model.}
 
 \item{lower}{an optional argument specifying the lower bound assumption of Se and Sp. Default to 0.5, which provides the mild assumption that Se and Sp are better than chance.}

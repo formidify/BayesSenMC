@@ -48,22 +48,22 @@ correctedOR <- function(a, N1, c, N0, name = "Corrected Model", chains = 2, trac
     int<lower=0> N0;
   }
   parameters {
-    real alpha0;
-    real alpha1;
+    real logit_pi0;
+    real LOR_c;
   }
   transformed parameters {
     real<lower=0, upper=1> pi1;
     real<lower=0, upper=1> pi0;
     real ORadj;
-    pi0 = exp(alpha0) / (exp(alpha0) + 1);
-    pi1 = exp(alpha0 + alpha1) / (exp(alpha0 + alpha1) + 1);
-    ORadj = exp(alpha1);
+    pi0 = exp(logit_pi0) / (exp(logit_pi0) + 1);
+    pi1 = exp(logit_pi0 + LOR_c) / (exp(logit_pi0 + LOR_c) + 1);
+    ORadj = exp(LOR_c);
   }
   model {
     a ~ binomial(N1, pi1);
     c ~ binomial(N0, pi0);
-    alpha0 ~ normal(0, 10);
-    alpha1 ~ normal(0, 2);
+    logit_pi0 ~ normal(0, 10);
+    LOR_c ~ normal(0, 2);
   }"
   
   # if user does not specify control parameters
@@ -73,13 +73,13 @@ correctedOR <- function(a, N1, c, N0, name = "Corrected Model", chains = 2, trac
   }
   else {
     model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0), 
-                  pars = c("ORadj"), chains = chains, refresh = refresh, seed = seed,
+                  pars = c("LOR_c"), chains = chains, refresh = refresh, seed = seed,
                   control = list(adapt_delta = 0.99, stepsize = 0.01, max_treedepth = 50), ...)
   }
   
   print(summary(model)$summary)
   if (traceplot) {
-    print(traceplot(model, inc_warmup = inc_warmup, window = window))
+    print(traceplot(model, inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
   }
   return(model)
 }
@@ -137,26 +137,26 @@ crudeOR <- function(a, N1, c, N0, se, sp, name = "Constant Misclassification Mod
     real<lower=0, upper=1> Sp;
   }
   parameters {
-    real alpha0;
-    real alpha1;
+    real logit_pi0;
+    real LOR_c;
   }
   transformed parameters {
     real<lower=0, upper=1> pi1;
     real<lower=0, upper=1> pi0;
     real ORadj;
-    real<lower=0, upper=1> p1s;
-    real<lower=0, upper=1> p0s;
-    pi0 = exp(alpha0) / (exp(alpha0) + 1);
-    pi1 = exp(alpha0 + alpha1) / (exp(alpha0 + alpha1) + 1);
-    p1s = pi1 * Se + (1 - pi1) * (1 - Sp);
-    p0s = pi0 * Se + (1 - pi0) * (1 - Sp);
-    ORadj = exp(alpha1);
+    real<lower=0, upper=1> p1;
+    real<lower=0, upper=1> p0;
+    pi0 = exp(logit_pi0) / (exp(logit_pi0) + 1);
+    pi1 = exp(logit_pi0 + LOR_c) / (exp(logit_pi0 + LOR_c) + 1);
+    p1 = pi1 * Se + (1 - pi1) * (1 - Sp);
+    p0 = pi0 * Se + (1 - pi0) * (1 - Sp);
+    ORadj = exp(LOR_c);
   }
   model {
-    a ~ binomial(N1, p1s);
-    c ~ binomial(N0, p0s);
-    alpha0 ~ normal(0, 10);
-    alpha1 ~ normal(0, 2);
+    a ~ binomial(N1, p1);
+    c ~ binomial(N0, p0);
+    logit_pi0 ~ normal(0, 10);
+    LOR_c ~ normal(0, 2);
   }"
   
   # if user does not specify control parameters
@@ -172,7 +172,7 @@ crudeOR <- function(a, N1, c, N0, se, sp, name = "Constant Misclassification Mod
   }
   print(summary(model)$summary)
   if (traceplot) {
-    print(traceplot(model, inc_warmup = inc_warmup, window = window))
+    print(traceplot(model, inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
   }
   return(model)
 }
@@ -246,8 +246,8 @@ logitOR <- function(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se = NU
     real sdY;
   }
   parameters {
-    real alpha0;
-    real alpha1;
+    real logit_pi0;
+    real LOR_c;
     real X;
     real Y;
   }
@@ -255,25 +255,25 @@ logitOR <- function(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se = NU
     real<lower=0, upper=1> pi1;
     real<lower=0, upper=1> pi0;
     real ORadj;
-    real p1s;
-    real p0s;
+    real p1;
+    real p0;
     real Se;
     real Sp;
     Se=(1 + exp(X)/(1 + exp(X))) / 2;
     Sp=(1 + exp(Y)/(1 + exp(Y))) / 2;
-    pi0 = exp(alpha0) / (exp(alpha0) + 1);
-    pi1 = exp(alpha0 + alpha1) / (exp(alpha0 + alpha1) + 1);
-    p1s = pi1 * Se + (1 - pi1) * (1 - Sp);
-    p0s = pi0 * Se + (1 - pi0) * (1 - Sp);
-    ORadj = exp(alpha1);
+    pi0 = exp(logit_pi0) / (exp(logit_pi0) + 1);
+    pi1 = exp(logit_pi0 + LOR_c) / (exp(logit_pi0 + LOR_c) + 1);
+    p1 = pi1 * Se + (1 - pi1) * (1 - Sp);
+    p0 = pi0 * Se + (1 - pi0) * (1 - Sp);
+    ORadj = exp(LOR_c);
   }
   model {
     X ~ normal(mX, sdX);
     Y ~ normal(mY, sdY);
-    a ~ binomial(N1, p1s);
-    c ~ binomial(N0, p0s);
-    alpha0 ~ normal(0, 10);
-    alpha1 ~ normal(0, 2);
+    a ~ binomial(N1, p1);
+    c ~ binomial(N0, p0);
+    logit_pi0 ~ normal(0, 10);
+    LOR_c ~ normal(0, 2);
   }
   "
   
@@ -281,19 +281,19 @@ logitOR <- function(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se = NU
   # default set to smaller step size to improve divergence in some cases
   if ('control' %in% names(options)) {
     model <- stan(model_code = code, model_name = name, data=list(a = a, N1 = N1, c = c, N0 = N0, mX = m.lg.se, mY = m.lg.sp, 
-                  sdX = s.lg.se, sdY = s.lg.sp), pars = c("ORadj"), chains = chains, refresh = refresh, 
+                  sdX = s.lg.se, sdY = s.lg.sp), pars = c("LOR_c"), chains = chains, refresh = refresh, 
                   init = rep(list(list(X = lg.se, Y = lg.sp)), chains), seed = seed, ...)
   }
   else {
     model <- stan(model_code = code, model_name = name, data=list(a = a, N1 = N1, c = c, N0 = N0, mX = m.lg.se, mY = m.lg.sp, 
-                  sdX = s.lg.se, sdY = s.lg.sp), pars = c("ORadj"), chains = chains, refresh = refresh, 
+                  sdX = s.lg.se, sdY = s.lg.sp), pars = c("LOR_c"), chains = chains, refresh = refresh, 
                   init = rep(list(list(X = lg.se, Y = lg.sp)), chains), seed = seed,
                   control = list(adapt_delta = 0.99, stepsize = 0.01, max_treedepth = 50), ...)
   }
   
   print(summary(model)$summary)
   if (traceplot) {
-    print(traceplot(model, inc_warmup = inc_warmup, window = window))
+    print(traceplot(model, inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
   }
   return(model)
 }
@@ -369,8 +369,8 @@ fixedCorrOR <- function(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se 
     real rhoSe;
   }
   parameters {
-    real alpha0;
-    real alpha1;
+    real logit_pi0;
+    real LOR_c;
     real X0;
     real X1;
   }
@@ -382,25 +382,25 @@ fixedCorrOR <- function(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se 
     real<lower=0, upper=1> Sp;
     real mcx1;
     real preccx1;
-    real p1s;
-    real p0s;
+    real p1;
+    real p0;
     mcx1 = mX1 + rhoSe * (X0 - mX0) * ((precX1 / precX0)^0.5);
     preccx1 = precX1 / (1 - rhoSe^2);
-    pi0 = exp(alpha0) / (exp(alpha0) + 1);
-    pi1 = exp(alpha0 + alpha1) / (exp(alpha0 + alpha1) + 1);
+    pi0 = exp(logit_pi0) / (exp(logit_pi0) + 1);
+    pi1 = exp(logit_pi0 + LOR_c) / (exp(logit_pi0 + LOR_c) + 1);
     Se = (1 + exp(X0) / (1 + exp(X0))) / 2;
     Sp = (1 + exp(X1) / (1 + exp(X1))) / 2;
-    p1s = pi1 * Se + (1 - pi1) * (1 - Sp);
-    p0s = pi0 * Se + (1 - pi0) * (1 - Sp);
-    ORadj = exp(alpha1);
+    p1 = pi1 * Se + (1 - pi1) * (1 - Sp);
+    p0 = pi0 * Se + (1 - pi0) * (1 - Sp);
+    ORadj = exp(LOR_c);
   }
   model {
-    a ~ binomial(N1, p1s);
-    c ~ binomial(N0, p0s);
+    a ~ binomial(N1, p1);
+    c ~ binomial(N0, p0);
     X0 ~ normal(mX0, (1 / precX0)^0.5);
     X1 ~ normal(mcx1, (1 / preccx1)^0.5);
-    alpha0~normal(0, 10);
-    alpha1~normal(0, 2);
+    logit_pi0~normal(0, 10);
+    LOR_c~normal(0, 2);
   }
   "
   
@@ -408,19 +408,19 @@ fixedCorrOR <- function(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se 
   # default set to smaller step size to improve divergence in some cases
   if ('control' %in% names(options)) {
     model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0, mX0 = m.lg.se, mX1 = m.lg.sp, 
-                  precX0 = 1 / (s.lg.se)^2, precX1 = 1 / (s.lg.sp)^2, rhoSe = rho), pars = c("ORadj"), chains = chains, refresh = refresh, 
+                  precX0 = 1 / (s.lg.se)^2, precX1 = 1 / (s.lg.sp)^2, rhoSe = rho), pars = c("LOR_c"), chains = chains, refresh = refresh, 
                   init = rep(list(list(X0 = lg.se, X1 = lg.sp)), chains), seed = seed, ...)
   }
   else {
     model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0, mX0 = m.lg.se, mX1 = m.lg.sp, 
-                  precX0 = 1 / (s.lg.se)^2, precX1 = 1 / (s.lg.sp)^2, rhoSe = rho), pars = c("ORadj"), chains = chains, refresh = refresh, 
+                  precX0 = 1 / (s.lg.se)^2, precX1 = 1 / (s.lg.sp)^2, rhoSe = rho), pars = c("LOR_c"), chains = chains, refresh = refresh, 
                   init = rep(list(list(X0 = lg.se, X1 = lg.sp)), chains), seed = seed,
                   control = list(adapt_delta = 0.99, stepsize = 0.01, max_treedepth = 50), ...)
   }
   
   print(summary(model)$summary)
   if (traceplot) {
-    print(traceplot(model, inc_warmup = inc_warmup, window = window))
+    print(traceplot(model, inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
   }
   return(model)
 }
@@ -502,8 +502,8 @@ randCorrOR <- function(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se =
     real sZ;
   }
   parameters {
-    real alpha0;
-    real alpha1;
+    real logit_pi0;
+    real LOR_c;
     real Z;
     real X0;
     real X1;
@@ -517,27 +517,27 @@ randCorrOR <- function(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se =
     real rhoSe;
     real mcx1;
     real preccx1;
-    real p1s;
-    real p0s;
+    real p1;
+    real p0;
     rhoSe = (exp(2 * Z) - 1)/(1 + exp(2 * Z));
     mcx1 = mX1 + rhoSe * (X0 - mX0) * pow(precX1 / precX0, 0.5);
     preccx1 = precX1 / (1 - pow(rhoSe, 2));
     Se = (1 + exp(X0) / (1 + exp(X0))) / 2;
     Sp = (1 + exp(X1) / (1 + exp(X1))) / 2;
-    pi0 = exp(alpha0) / (exp(alpha0) + 1);
-    pi1 = exp(alpha0 + alpha1) / (exp(alpha0 + alpha1) + 1);
-    p1s = pi1 * Se + (1 - pi1) * (1 - Sp);
-    p0s = pi0 * Se + (1 - pi0) * (1 - Sp);
-    ORadj = exp(alpha1);
+    pi0 = exp(logit_pi0) / (exp(logit_pi0) + 1);
+    pi1 = exp(logit_pi0 + LOR_c) / (exp(logit_pi0 + LOR_c) + 1);
+    p1 = pi1 * Se + (1 - pi1) * (1 - Sp);
+    p0 = pi0 * Se + (1 - pi0) * (1 - Sp);
+    ORadj = exp(LOR_c);
   }
   model {
-    a ~ binomial(N1, p1s);
-    c ~ binomial(N0, p0s);
+    a ~ binomial(N1, p1);
+    c ~ binomial(N0, p0);
     Z ~ normal(mZ, sZ);
     X0 ~ normal(mX0, (1/precX0)^0.5);
     X1 ~ normal(mcx1, (1/preccx1)^0.5);
-    alpha0 ~ normal(0, 10);
-    alpha1 ~ normal(0, 2);
+    logit_pi0 ~ normal(0, 10);
+    LOR_c ~ normal(0, 2);
   }
   "
   # if user does not specify control parameters
@@ -545,19 +545,19 @@ randCorrOR <- function(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se =
   
   if ('control' %in% names(options)) {
     model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0, mX0 = m.lg.se, mX1 = m.lg.sp, 
-                  precX0 = 1 / (s.lg.se)^2, precX1 = 1 / (s.lg.sp)^2, mZ = m.z, sZ = s.z), pars = c("ORadj"), chains = chains, refresh = refresh,
+                  precX0 = 1 / (s.lg.se)^2, precX1 = 1 / (s.lg.sp)^2, mZ = m.z, sZ = s.z), pars = c("LOR_c"), chains = chains, refresh = refresh,
                   init = rep(list(list(X0 = lg.se, X1 = lg.sp, Z = z)), chains), seed = seed, ...)
   }
   else {
     model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0, mX0 = m.lg.se, mX1 = m.lg.sp, 
-                  precX0 = 1 / (s.lg.se)^2, precX1 = 1 / (s.lg.sp)^2, mZ = m.z, sZ = s.z), pars = c("ORadj"), chains = chains, refresh = refresh,
+                  precX0 = 1 / (s.lg.se)^2, precX1 = 1 / (s.lg.sp)^2, mZ = m.z, sZ = s.z), pars = c("LOR_c"), chains = chains, refresh = refresh,
                   init = rep(list(list(X0 = lg.se, X1 = lg.sp, Z = z)), chains), seed = seed,
                   control = list(adapt_delta = 0.99, stepsize = 0.01, max_treedepth = 50), ...)
   }
   
   print(summary(model)$summary)
   if (traceplot) {
-    print(traceplot(model, inc_warmup = inc_warmup, window = window))
+    print(traceplot(model, inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
   }
   return (model)
 }
@@ -629,8 +629,8 @@ nonDiffOR <- function(a, N1, c, N0, mu, varz, z = NULL, name = "Model with diffe
     matrix[4,4] varZ;
   }
   parameters {
-    real alpha0;
-    real alpha1;
+    real logit_pi0;
+    real LOR_c;
     vector[4] Z;
   }
   transformed parameters {
@@ -641,23 +641,23 @@ nonDiffOR <- function(a, N1, c, N0, mu, varz, z = NULL, name = "Model with diffe
     real Se1;
     real Sp0;
     real Sp1;
-    real<lower=0, upper=1> p1s;
-    real<lower=0, upper=1> p0s;
+    real<lower=0, upper=1> p1;
+    real<lower=0, upper=1> p0;
     Se0 = (1 + exp(Z[1]) / (1 + exp(Z[1]))) / 2;
     Se1 = (1 + exp(Z[2]) / (1 + exp(Z[2]))) / 2;
     Sp0 = (1 + exp(Z[3]) / (1 + exp(Z[3]))) / 2;
     Sp1 = (1 + exp(Z[4]) / (1 + exp(Z[4]))) / 2;
-    pi0 = exp(alpha0) / (exp(alpha0) + 1);
-    pi1 = exp(alpha0 + alpha1) / (exp(alpha0 + alpha1) + 1);
-    p1s = pi1 * Se1 + (1 - pi1) * (1 - Sp1);
-    p0s = pi0 * Se0 + (1 - pi0) * (1 - Sp0);
-    ORadj = exp(alpha1);
+    pi0 = exp(logit_pi0) / (exp(logit_pi0) + 1);
+    pi1 = exp(logit_pi0 + LOR_c) / (exp(logit_pi0 + LOR_c) + 1);
+    p1 = pi1 * Se1 + (1 - pi1) * (1 - Sp1);
+    p0 = pi0 * Se0 + (1 - pi0) * (1 - Sp0);
+    ORadj = exp(LOR_c);
   }
   model {
-    a ~ binomial(N1, p1s);
-    c ~ binomial(N0, p0s);
-    alpha0 ~ normal(0, 10);
-    alpha1 ~ normal(0, 2);
+    a ~ binomial(N1, p1);
+    c ~ binomial(N0, p0);
+    logit_pi0 ~ normal(0, 10);
+    LOR_c ~ normal(0, 2);
     Z ~ multi_normal(Mu, varZ);
   }
   "
@@ -665,17 +665,17 @@ nonDiffOR <- function(a, N1, c, N0, mu, varz, z = NULL, name = "Model with diffe
   # default set to smaller step size to improve divergence in some cases
   if ('control' %in% names(options)) {
     model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0, Mu = mu, 
-      varZ = varz), pars = c("ORadj"), chains = chains, init = rep(list(list(Z = z)), chains), refresh = refresh, seed = seed, ...)
+      varZ = varz), pars = c("LOR_c"), chains = chains, init = rep(list(list(Z = z)), chains), refresh = refresh, seed = seed, ...)
   }
   else {
     model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0, Mu = mu, 
-                  varZ = varz), pars = c("ORadj"), chains = chains, init = rep(list(list(Z = z)), chains), refresh = refresh, seed = seed,
+                  varZ = varz), pars = c("LOR_c"), chains = chains, init = rep(list(list(Z = z)), chains), refresh = refresh, seed = seed,
                   control = list(adapt_delta = 0.99, stepsize = 0.01, max_treedepth = 50), ...)
   }
   print(summary(model)$summary)
   
   if (traceplot) {
-    print(traceplot(model, inc_warmup = inc_warmup, window = window))
+    print(traceplot(model, inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
   }
   return(model)
 }
