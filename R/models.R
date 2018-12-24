@@ -29,8 +29,9 @@
 #' # Data from \url{https://www.sciencedirect.com/science/article/pii/S0165032715303864#bib13}
 #' 
 #' # 3 MCMC chains with 10000 iterations each
+#' \dontrun{
 #' correctedOR(a = 66, N1 = 11782, c = 243, N0 = 57973, chains = 3, iter = 10000, seed = 0)
-#'
+#' }
 #' correctedOR(a = 66, N1 = 11782, c = 243, N0 = 57973, traceplot = TRUE)
 
 correctedOR <- function(a, N1, c, N0, name = "Corrected Model", chains = 2, traceplot = FALSE, inc_warmup = FALSE, window = NULL, refresh = 0, seed = NA, ...) {
@@ -69,17 +70,17 @@ correctedOR <- function(a, N1, c, N0, name = "Corrected Model", chains = 2, trac
   # if user does not specify control parameters
   # default set to smaller step size to improve divergence in some cases
   if ('control' %in% names(options)) {
-    model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0), pars = c("ORadj"), chains = chains, refresh = refresh, seed = seed, ...)
+    model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0), pars = c("LOR_c", "ORadj"), chains = chains, refresh = refresh, seed = seed, ...)
   }
   else {
     model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0), 
-                  pars = c("LOR_c"), chains = chains, refresh = refresh, seed = seed,
+                  pars = c("LOR_c", "ORadj"), chains = chains, refresh = refresh, seed = seed,
                   control = list(adapt_delta = 0.99, stepsize = 0.01, max_treedepth = 50), ...)
   }
   
   print(summary(model)$summary)
   if (traceplot) {
-    print(traceplot(model, inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
+    print(traceplot(model, pars = "LOR_c", inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
   }
   return(model)
 }
@@ -114,10 +115,12 @@ correctedOR <- function(a, N1, c, N0, name = "Corrected Model", chains = 2, trac
 #' @export
 #' @examples
 #' # Case-control study data of Bipolar Disorder with rheumatoid arthritis (Farhi et al. 2016)
-#' # Data from \url{https://www.sciencedirect.com/science/article/pii/S0165032715303864#bib13}
+#' # Data from \url{https://www.sciencedirect.com/science/article/pii/S0165032715303864#bib13}\
+#' 
+#' \dontrun{
 #' crudeOR(a = 66, N1 = 11782, c = 243, N0 = 57973, se = 0.744, sp = 0.755, chains = 3, 
 #' iter = 10000, seed = 0)
-#'
+#' }
 #' crudeOR(a = 66, N1 = 11782, c = 243, N0 = 57973, se = 0.744, sp = 0.755, traceplot = TRUE)
 
 crudeOR <- function(a, N1, c, N0, se, sp, name = "Constant Misclassification Model", chains = 2, traceplot = FALSE, inc_warmup = FALSE, window = NULL, refresh = 0, seed = NA, ...) {
@@ -163,16 +166,16 @@ crudeOR <- function(a, N1, c, N0, se, sp, name = "Constant Misclassification Mod
   # default set to smaller step size to improve divergence in some cases
   if ('control' %in% names(options)) {
     model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0, Se = se, Sp = sp), 
-                  pars = c("ORadj"), chains = chains, refresh = refresh, seed = seed, ...)
+                  pars = c("LOR_c", "ORadj"), chains = chains, refresh = refresh, seed = seed, ...)
   }
   else {
     model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0, Se = se, Sp = sp), 
-                  pars = c("ORadj"), chains = chains, refresh = refresh, seed = seed,
+                  pars = c("LOR_c", "ORadj"), chains = chains, refresh = refresh, seed = seed,
                   control = list(adapt_delta = 0.99, stepsize = 0.01, max_treedepth = 50), ...)
   }
   print(summary(model)$summary)
   if (traceplot) {
-    print(traceplot(model, inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
+    print(traceplot(model, pars = "LOR_c", inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
   }
   return(model)
 }
@@ -214,9 +217,10 @@ crudeOR <- function(a, N1, c, N0, se, sp, name = "Constant Misclassification Mod
 #' # Case-control study data of Bipolar Disorder with rheumatoid arthritis (Farhi et al. 2016)
 #' # Data from \url{https://www.sciencedirect.com/science/article/pii/S0165032715303864#bib13}
 #' 
+#' \dontrun{
 #' logitOR(a = 66, N1 = 11782, c = 243, N0 = 57973, m.lg.se = 1.069, m.lg.sp = 1.126,
 #'   s.lg.se = 0.893, s.lg.sp = 0.712, chains = 3, iter = 10000, seed = 0)
-#'
+#' }
 #' logitOR(a = 66, N1 = 11782, c = 243, N0 = 57973, m.lg.se = 1.069, m.lg.sp = 1.126,
 #'   s.lg.se = 0.893, s.lg.sp = 0.712, lg.se = 2.197, lg.sp = 2.197, traceplot = TRUE)
 
@@ -281,19 +285,19 @@ logitOR <- function(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se = NU
   # default set to smaller step size to improve divergence in some cases
   if ('control' %in% names(options)) {
     model <- stan(model_code = code, model_name = name, data=list(a = a, N1 = N1, c = c, N0 = N0, mX = m.lg.se, mY = m.lg.sp, 
-                  sdX = s.lg.se, sdY = s.lg.sp), pars = c("LOR_c"), chains = chains, refresh = refresh, 
+                  sdX = s.lg.se, sdY = s.lg.sp), pars = c("LOR_c", "ORadj"), chains = chains, refresh = refresh, 
                   init = rep(list(list(X = lg.se, Y = lg.sp)), chains), seed = seed, ...)
   }
   else {
     model <- stan(model_code = code, model_name = name, data=list(a = a, N1 = N1, c = c, N0 = N0, mX = m.lg.se, mY = m.lg.sp, 
-                  sdX = s.lg.se, sdY = s.lg.sp), pars = c("LOR_c"), chains = chains, refresh = refresh, 
+                  sdX = s.lg.se, sdY = s.lg.sp), pars = c("LOR_c", "ORadj"), chains = chains, refresh = refresh, 
                   init = rep(list(list(X = lg.se, Y = lg.sp)), chains), seed = seed,
                   control = list(adapt_delta = 0.99, stepsize = 0.01, max_treedepth = 50), ...)
   }
   
   print(summary(model)$summary)
   if (traceplot) {
-    print(traceplot(model, inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
+    print(traceplot(model, pars = "LOR_c", inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
   }
   return(model)
 }
@@ -334,10 +338,10 @@ logitOR <- function(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se = NU
 #' @examples
 #' # Case-control study data of Bipolar Disorder with rheumatoid arthritis (Farhi et al. 2016)
 #' # Data from \url{https://www.sciencedirect.com/science/article/pii/S0165032715303864#bib13}
-#' 
+#' \dontrun{
 #' fixedCorrOR(a = 66, N1 = 11782, c = 243, N0 = 57973, m.lg.se = 1.069, m.lg.sp = 1.126,
 #'   s.lg.se = 0.893, s.lg.sp = 0.712, rho = -0.379, chains = 3, iter = 10000, seed = 0)
-#'
+#' }
 #' fixedCorrOR(a = 66, N1 = 11782, c = 243, N0 = 57973, m.lg.se = 1.069, m.lg.sp = 1.126,
 #'   s.lg.se = 0.893, s.lg.sp = 0.712, lg.se = 2.197, lg.sp = 0.744, rho = -0.379, 
 #'   traceplot = TRUE)
@@ -408,19 +412,19 @@ fixedCorrOR <- function(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se 
   # default set to smaller step size to improve divergence in some cases
   if ('control' %in% names(options)) {
     model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0, mX0 = m.lg.se, mX1 = m.lg.sp, 
-                  precX0 = 1 / (s.lg.se)^2, precX1 = 1 / (s.lg.sp)^2, rhoSe = rho), pars = c("LOR_c"), chains = chains, refresh = refresh, 
+                  precX0 = 1 / (s.lg.se)^2, precX1 = 1 / (s.lg.sp)^2, rhoSe = rho), pars = c("LOR_c", "ORadj"), chains = chains, refresh = refresh, 
                   init = rep(list(list(X0 = lg.se, X1 = lg.sp)), chains), seed = seed, ...)
   }
   else {
     model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0, mX0 = m.lg.se, mX1 = m.lg.sp, 
-                  precX0 = 1 / (s.lg.se)^2, precX1 = 1 / (s.lg.sp)^2, rhoSe = rho), pars = c("LOR_c"), chains = chains, refresh = refresh, 
+                  precX0 = 1 / (s.lg.se)^2, precX1 = 1 / (s.lg.sp)^2, rhoSe = rho), pars = c("LOR_c", "ORadj"), chains = chains, refresh = refresh, 
                   init = rep(list(list(X0 = lg.se, X1 = lg.sp)), chains), seed = seed,
                   control = list(adapt_delta = 0.99, stepsize = 0.01, max_treedepth = 50), ...)
   }
   
   print(summary(model)$summary)
   if (traceplot) {
-    print(traceplot(model, inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
+    print(traceplot(model, pars = "LOR_c", inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
   }
   return(model)
 }
@@ -464,11 +468,11 @@ fixedCorrOR <- function(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se 
 #' @examples
 #' # Case-control study data of Bipolar Disorder with rheumatoid arthritis (Farhi et al. 2016)
 #' # Data from \url{https://www.sciencedirect.com/science/article/pii/S0165032715303864#bib13}
-#' 
+#' \dontrun{
 #' randCorrOR(a = 66, N1 = 11782, c = 243, N0 = 57973, m.lg.se = 1.069, m.lg.sp = 1.126,
 #'   s.lg.se = 0.893, s.lg.sp = 0.712, m.z = -0.399, s.z = 0.139, chains = 3, 
 #'   iter = 10000, seed = 0)
-#'
+#' }
 #' randCorrOR(a = 66, N1 = 11782, c = 243, N0 = 57973, m.lg.se = 1.069, m.lg.sp = 1.126,
 #'   s.lg.se = 0.893, s.lg.sp = 0.712, lg.se = 2.197, lg.sp = 0.744, m.z = -0.399, 
 #'   s.z = 0.139, traceplot = TRUE)
@@ -545,19 +549,19 @@ randCorrOR <- function(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se =
   
   if ('control' %in% names(options)) {
     model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0, mX0 = m.lg.se, mX1 = m.lg.sp, 
-                  precX0 = 1 / (s.lg.se)^2, precX1 = 1 / (s.lg.sp)^2, mZ = m.z, sZ = s.z), pars = c("LOR_c"), chains = chains, refresh = refresh,
+                  precX0 = 1 / (s.lg.se)^2, precX1 = 1 / (s.lg.sp)^2, mZ = m.z, sZ = s.z), pars = c("LOR_c", "ORadj"), chains = chains, refresh = refresh,
                   init = rep(list(list(X0 = lg.se, X1 = lg.sp, Z = z)), chains), seed = seed, ...)
   }
   else {
     model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0, mX0 = m.lg.se, mX1 = m.lg.sp, 
-                  precX0 = 1 / (s.lg.se)^2, precX1 = 1 / (s.lg.sp)^2, mZ = m.z, sZ = s.z), pars = c("LOR_c"), chains = chains, refresh = refresh,
+                  precX0 = 1 / (s.lg.se)^2, precX1 = 1 / (s.lg.sp)^2, mZ = m.z, sZ = s.z), pars = c("LOR_c", "ORadj"), chains = chains, refresh = refresh,
                   init = rep(list(list(X0 = lg.se, X1 = lg.sp, Z = z)), chains), seed = seed,
                   control = list(adapt_delta = 0.99, stepsize = 0.01, max_treedepth = 50), ...)
   }
   
   print(summary(model)$summary)
   if (traceplot) {
-    print(traceplot(model, inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
+    print(traceplot(model, pars = "LOR_c", inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
   }
   return (model)
 }
@@ -569,8 +573,14 @@ randCorrOR <- function(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se =
 #' @param N1 # of total subjects in the case group.
 #' @param c # of exposed subjects in the control group.
 #' @param N0 # of total subjects in the control group.
-#' @param mu vector of length 4; multivariate normal distribution of \eqn{z \sim (mu, varz)}, where each \eqn{\mu} corresponds to the logit mean of \eqn{Se_0$}, \eqn{Se_1}, \eqn{Sp_0} and \eqn{Sp_1}.
-#' @param varz variance-covariance matrix of z, passed in as a 4 by 4 matrix.
+#' @param mu vector of length 4; multivariate normal distribution of \eqn{z \sim (mu, varz)}, where each \eqn{\mu} corresponds to the logit mean of \eqn{Se_0$}, \eqn{Se_1}, \eqn{Sp_0} and \eqn{Sp_1} (0 for controls, 1 for cases group).
+#' @param s.lg.se0 standard deviation of logit Se in the control group.
+#' @param s.lg.se1 standard deviation of logit Se in the case group.
+#' @param s.lg.sp0 standard deviation of logit Sp in the control group.
+#' @param s.lg.sp1 standard deviation of logit Sp in the case group.
+#' @param corr.sesp0 correlation between Se_0 and Sp_0.
+#' @param corr.sesp1 correlation between Se_1 and Sp_1.
+#' @param corr.group correlation between Se_0 and Se_1, Sp_0 and Sp_1. Default to 0. 
 #' @param z vector of length 4; used as an initial value for \eqn{z \sim (mu, varz)}. Default to mu. 
 #' @param name a string of the name of the model. Default to "Model with differential misclassification".
 #' @param chains number of Markov Chains. Default to 2.
@@ -594,20 +604,18 @@ randCorrOR <- function(a, N1, c, N0, m.lg.se, m.lg.sp, s.lg.se, s.lg.sp, lg.se =
 #' @examples
 #' # Case-control study data of Bipolar Disorder with rheumatoid arthritis (Farhi et al. 2016)
 #' # Data from \url{https://www.sciencedirect.com/science/article/pii/S0165032715303864#bib13}
-#' 
-#' nonDiffOR(a = 126, N1 = 218, c = 71, N0 = 295, mu = c(2.76, 2.76, 3.58, 3.58),
-#'   varz = c(0.9100002, 0.8190002, -0.5053286, -0.5053286, 0.8190002, 0.9100002,
-#'   -0.5053286, -0.5053286, -0.5053286, -0.5053286, 0.7300000, 0.6570000,
-#'   -0.5053286, -0.5053286, 0.6570000, 0.7300000), z = c(2.76, 2.76, 3.58, 3.58),
-#'    chains = 3, iter = 10000, seed = 0)
-#'
-#' nonDiffOR(a = 126, N1 = 218, c = 71, N0 = 295, mu = c(2.76, 2.76, 3.58, 3.58),
-#'   varz = matrix(c(0.9100002, 0.8190002, -0.5053286, -0.5053286, 0.8190002, 0.9100002,
-#'   -0.5053286, -0.5053286, -0.5053286, -0.5053286, 0.7300000, 0.6570000,
-#'   -0.5053286, -0.5053286, 0.6570000, 0.7300000), 4, 4), z = c(2.76, 2.76, 3.58, 3.58), 
-#'   traceplot = TRUE)
+#' \dontrun{
+#' nonDiffOR(a = 66, N1 = 11782, c = 243, N0 = 57973, chains = 3, mu = c(1.069, 1.069, 1.126, 1.126),
+#'   s.lg.se0 = 0.893, s.lg.se1 = 0.893, s.lg.sp0 = 0.712, s.lg.sp1 = 0.712, corr.sesp0 = -0.377, 
+#'   corr.sesp1 = -0.377, corr.group = 0, iter = 10000, seed = 0)
+#' }
+#' nonDiffOR(a = 66, N1 = 11782, c = 243, N0 = 57973, , mu = c(1.069, 1.069, 1.126, 1.126),
+#'   s.lg.se0 = 0.893, s.lg.se1 = 0.893, s.lg.sp0 = 0.712, s.lg.sp1 = 0.712, corr.sesp0 = -0.377, 
+#'   corr.sesp1 = -0.377, corr.group = 0, traceplot = TRUE)
 
-nonDiffOR <- function(a, N1, c, N0, mu, varz, z = NULL, name = "Model with differential classification", chains = 2,
+
+nonDiffOR <- function(a, N1, c, N0, mu, s.lg.se0, s.lg.se1, s.lg.sp0, s.lg.sp1, corr.sesp0, corr.sesp1,
+                      corr.group = 0, z = NULL, name = "Model with differential classification", chains = 2,
                       traceplot = FALSE, inc_warmup = FALSE, window = NULL, refresh = 0, seed = 0, ...) {
   
   if (!((a <= N1) & (a >= 0) & (c <= N0) & (c >= 0))) {
@@ -661,21 +669,27 @@ nonDiffOR <- function(a, N1, c, N0, mu, varz, z = NULL, name = "Model with diffe
     Z ~ multi_normal(Mu, varZ);
   }
   "
+  
+  varz = matrix(c(s.lg.se0^2, corr.group*s.lg.se0*s.lg.se1, corr.sesp0*s.lg.se0*s.lg.sp0, corr.group*s.lg.se0*s.lg.sp1,
+                  corr.group*s.lg.se0*s.lg.se1, s.lg.se1^2, corr.group*s.lg.se1*s.lg.sp0, corr.sesp1*s.lg.se1*s.lg.sp1,
+                  corr.sesp0*s.lg.se0*s.lg.sp0, corr.group*s.lg.se1*s.lg.sp0, s.lg.sp0^2, corr.group*s.lg.sp0*s.lg.sp1,
+                  corr.group*s.lg.se0*s.lg.sp1, corr.sesp1*s.lg.se1*s.lg.sp1, corr.group*s.lg.sp0*s.lg.sp1, s.lg.sp1^2), 4, 4)
+  
   # if user does not specify control parameters
   # default set to smaller step size to improve divergence in some cases
   if ('control' %in% names(options)) {
     model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0, Mu = mu, 
-      varZ = varz), pars = c("LOR_c"), chains = chains, init = rep(list(list(Z = z)), chains), refresh = refresh, seed = seed, ...)
+      varZ = varz), pars = c("LOR_c", "ORadj"), chains = chains, init = rep(list(list(Z = z)), chains), refresh = refresh, seed = seed, ...)
   }
   else {
     model <- stan(model_code = code, model_name = name, data = list(a = a, N1 = N1, c = c, N0 = N0, Mu = mu, 
-                  varZ = varz), pars = c("LOR_c"), chains = chains, init = rep(list(list(Z = z)), chains), refresh = refresh, seed = seed,
+                  varZ = varz), pars = c("LOR_c", "ORadj"), chains = chains, init = rep(list(list(Z = z)), chains), refresh = refresh, seed = seed,
                   control = list(adapt_delta = 0.99, stepsize = 0.01, max_treedepth = 50), ...)
   }
   print(summary(model)$summary)
   
   if (traceplot) {
-    print(traceplot(model, inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
+    print(traceplot(model, pars = "LOR_c", inc_warmup = inc_warmup, window = window) + xlab("Iterations shown"))
   }
   return(model)
 }

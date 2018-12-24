@@ -52,9 +52,11 @@ Generate a stanfit object corresponding to a posterior distribution of corrected
 }
 \examples{
 # Case-control study data of Bipolar Disorder with rheumatoid arthritis (Farhi et al. 2016)
-# Data from \\url{https://www.sciencedirect.com/science/article/pii/S0165032715303864#bib13}
+# Data from \\url{https://www.sciencedirect.com/science/article/pii/S0165032715303864#bib13}\\
+
+\dontrun{
 crudeOR(a = 66, N1 = 11782, c = 243, N0 = 57973, se = 0.744, sp = 0.755, chains = 3, 
 iter = 10000, seed = 0)
-
+}
 crudeOR(a = 66, N1 = 11782, c = 243, N0 = 57973, se = 0.744, sp = 0.755, traceplot = TRUE)
 }

@@ -9,7 +9,7 @@
 #' @param se sensitivity. Default to 1. If no other values are specified for either se or sp, then only the density curve of corrected model will be drawn.
 #' @param sp specificity. Default to 1.
 #' @param x.min shows only samples with corrected odds ratio larger or equal to \code{x.min}. Default to 0.
-#' @param x.max shows only samples with corrected odds ratio smaller or equal to \code{x.max}. Default to the largest OR in the samples.
+#' @param x.max shows only samples with corrected odds ratio smaller or equal to \code{x.max}. Default to the largest OR in the posterior samples.
 #' @param y.max shows only samples or density line within the range of (0, \code{y.max}). 
 #' @param binwidth default to \code{0.25}
 #' @param fill default to \code{"gray"}
@@ -42,7 +42,8 @@ OR_hist <- function(model, a, N1, c, N0, se = 1, sp = 1, x.min = 0, x.max = NULL
   d <- N0 - c
   
   if (is.null(x.max)) {
-    x.max <- summary(model, probs = c(1))$summary[[7]]
+    # locate the maximum log odds ratio from the input model posterior samples
+    x.max <- summary(model, probs = c(1))$summary['ORadj','100%']
   }
   
   # when se and sp are both equal to 1 (corrected OR)
@@ -56,7 +57,7 @@ OR_hist <- function(model, a, N1, c, N0, se = 1, sp = 1, x.min = 0, x.max = NULL
 
   y1 <- data.frame(xx, yy1)
 
-  hist <- stan_hist(model, binwidth = binwidth, fill = fill, ...) +
+  hist <- stan_hist(model, pars = "ORadj", binwidth = binwidth, fill = fill, ...) +
             geom_line(mapping = aes(x = xx, y = yy1), data = y1, linetype = 1, colour = "black") 
 
   if (!(se == 1 & sp == 1)) {

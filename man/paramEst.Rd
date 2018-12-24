@@ -4,7 +4,7 @@
 \alias{paramEst}
 \title{Parameter estimates of the GLMM model}
 \usage{
-paramEst(model)
+paramEst(model, lower = 0.5, upper = 1)
 }
 \arguments{
 \item{model}{a GLMM model built with the \code{nlme_nondiff()} function.}

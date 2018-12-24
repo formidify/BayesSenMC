@@ -24,7 +24,7 @@ OR_hist(model, a, N1, c, N0, se = 1, sp = 1, x.min = 0,
 
 \item{x.min}{shows only samples with corrected odds ratio larger or equal to \code{x.min}. Default to 0.}
 
-\item{x.max}{shows only samples with corrected odds ratio smaller or equal to \code{x.max}. Default to the largest OR in the samples.}
+\item{x.max}{shows only samples with corrected odds ratio smaller or equal to \code{x.max}. Default to the largest OR in the posterior samples.}
 
 \item{y.max}{shows only samples or density line within the range of (0, \code{y.max}).}
 

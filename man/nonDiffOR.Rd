@@ -4,7 +4,8 @@
 \alias{nonDiffOR}
 \title{Model with differential misclassification}
 \usage{
-nonDiffOR(a, N1, c, N0, mu, varz, z = NULL,
+nonDiffOR(a, N1, c, N0, mu, s.lg.se0, s.lg.se1, s.lg.sp0, s.lg.sp1,
+  corr.sesp0, corr.sesp1, corr.group = 0, z = NULL,
   name = "Model with differential classification", chains = 2,
   traceplot = FALSE, inc_warmup = FALSE, window = NULL,
   refresh = 0, seed = 0, ...)
@@ -18,9 +19,21 @@ nonDiffOR(a, N1, c, N0, mu, varz, z = NULL,
 
 \item{N0}{# of total subjects in the control group.}
 
-\item{mu}{vector of length 4; multivariate normal distribution of \eqn{z \sim (mu, varz)}, where each \eqn{\mu} corresponds to the logit mean of \eqn{Se_0$}, \eqn{Se_1}, \eqn{Sp_0} and \eqn{Sp_1}.}
+\item{mu}{vector of length 4; multivariate normal distribution of \eqn{z \sim (mu, varz)}, where each \eqn{\mu} corresponds to the logit mean of \eqn{Se_0$}, \eqn{Se_1}, \eqn{Sp_0} and \eqn{Sp_1} (0 for controls, 1 for cases group).}
 
-\item{varz}{variance-covariance matrix of z, passed in as a 4 by 4 matrix.}
+\item{s.lg.se0}{standard deviation of logit Se in the control group.}
+
+\item{s.lg.se1}{standard deviation of logit Se in the case group.}
+
+\item{s.lg.sp0}{standard deviation of logit Sp in the control group.}
+
+\item{s.lg.sp1}{standard deviation of logit Sp in the case group.}
+
+\item{corr.sesp0}{correlation between Se_0 and Sp_0.}
+
+\item{corr.sesp1}{correlation between Se_1 and Sp_1.}
+
+\item{corr.group}{correlation between Se_0 and Se_1, Sp_0 and Sp_1. Default to 0.}
 
 \item{z}{vector of length 4; used as an initial value for \eqn{z \sim (mu, varz)}. Default to mu.}
 
@@ -56,16 +69,12 @@ Generate a stanfit object corresponding to a posterior distribution of corrected
 \examples{
 # Case-control study data of Bipolar Disorder with rheumatoid arthritis (Farhi et al. 2016)
 # Data from \\url{https://www.sciencedirect.com/science/article/pii/S0165032715303864#bib13}
-
-nonDiffOR(a = 126, N1 = 218, c = 71, N0 = 295, mu = c(2.76, 2.76, 3.58, 3.58),
-  varz = c(0.9100002, 0.8190002, -0.5053286, -0.5053286, 0.8190002, 0.9100002,
-  -0.5053286, -0.5053286, -0.5053286, -0.5053286, 0.7300000, 0.6570000,
-  -0.5053286, -0.5053286, 0.6570000, 0.7300000), z = c(2.76, 2.76, 3.58, 3.58),
-   chains = 3, iter = 10000, seed = 0)
-
-nonDiffOR(a = 126, N1 = 218, c = 71, N0 = 295, mu = c(2.76, 2.76, 3.58, 3.58),
-  varz = matrix(c(0.9100002, 0.8190002, -0.5053286, -0.5053286, 0.8190002, 0.9100002,
-  -0.5053286, -0.5053286, -0.5053286, -0.5053286, 0.7300000, 0.6570000,
-  -0.5053286, -0.5053286, 0.6570000, 0.7300000), 4, 4), z = c(2.76, 2.76, 3.58, 3.58), 
-  traceplot = TRUE)
+\dontrun{
+nonDiffOR(a = 66, N1 = 11782, c = 243, N0 = 57973, chains = 3, mu = c(1.069, 1.069, 1.126, 1.126),
+  s.lg.se0 = 0.893, s.lg.se1 = 0.893, s.lg.sp0 = 0.712, s.lg.sp1 = 0.712, corr.sesp0 = -0.377, 
+  corr.sesp1 = -0.377, corr.group = 0, iter = 10000, seed = 0)
+}
+nonDiffOR(a = 66, N1 = 11782, c = 243, N0 = 57973, , mu = c(1.069, 1.069, 1.126, 1.126),
+  s.lg.se0 = 0.893, s.lg.se1 = 0.893, s.lg.sp0 = 0.712, s.lg.sp1 = 0.712, corr.sesp0 = -0.377, 
+  corr.sesp1 = -0.377, corr.group = 0, traceplot = TRUE)
 }

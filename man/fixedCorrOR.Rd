@@ -65,10 +65,10 @@ Generate a stanfit object corresponding to a posterior distribution of corrected
 \examples{
 # Case-control study data of Bipolar Disorder with rheumatoid arthritis (Farhi et al. 2016)
 # Data from \\url{https://www.sciencedirect.com/science/article/pii/S0165032715303864#bib13}
-
+\dontrun{
 fixedCorrOR(a = 66, N1 = 11782, c = 243, N0 = 57973, m.lg.se = 1.069, m.lg.sp = 1.126,
   s.lg.se = 0.893, s.lg.sp = 0.712, rho = -0.379, chains = 3, iter = 10000, seed = 0)
-
+}
 fixedCorrOR(a = 66, N1 = 11782, c = 243, N0 = 57973, m.lg.se = 1.069, m.lg.sp = 1.126,
   s.lg.se = 0.893, s.lg.sp = 0.712, lg.se = 2.197, lg.sp = 0.744, rho = -0.379, 
   traceplot = TRUE)

@@ -51,7 +51,8 @@ Generate a stanfit object corresponding to a posterior distribution of uncorrect
 # Data from \\url{https://www.sciencedirect.com/science/article/pii/S0165032715303864#bib13}
 
 # 3 MCMC chains with 10000 iterations each
+\dontrun{
 correctedOR(a = 66, N1 = 11782, c = 243, N0 = 57973, chains = 3, iter = 10000, seed = 0)
-
+}
 correctedOR(a = 66, N1 = 11782, c = 243, N0 = 57973, traceplot = TRUE)
 }
