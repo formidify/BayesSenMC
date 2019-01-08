@@ -15,4 +15,6 @@ Imports:
     lme4,
 Depends: 
 	Rcpp (>= 0.12.19)
+Suggests:
+	gridExtra
 RoxygenNote: 6.1.1

@@ -28,10 +28,10 @@
 #' 
 #' my.mod <- randCorrOR(a = 66, N1 = 11782, c = 243, N0 = 57973, m.lg.se = 1.069, 
 #' m.lg.sp = 1.126, s.lg.se = 0.893, s.lg.sp = 0.712, m.z = -0.399, s.z = 0.139, 
-#' chains = 3, iter = 10000, seed = 0)
+#' seed = 0)
 #'   
 #' my.plot <- OR_hist(my.mod, a = 66, N1 = 11782, c = 243, N0 = 57973, se = 0.744, 
-#' sp = 0.755, x.max = 3, y.max = 5, binwidth = 0.1) + ggtitle("(e)")
+#' sp = 0.755, x.max = 3, y.max = 5, binwidth = 0.1) + ggtitle("Model with random correlation")
 
 OR_hist <- function(model, a, N1, c, N0, se = 1, sp = 1, x.min = 0, x.max = NULL, y.max = NULL, binwidth = 0.25, fill = "gray", ...) {
   if (!((a <= N1) & (a >= 0) & (c <= N0) & (c >= 0) & (se >= 0) & (se <= 1) & (sp >= 0) & (sp <= 1))) {
