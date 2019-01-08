@@ -2,18 +2,15 @@ Package: BayesSenMC
 Type: Package
 Title: Different models of posterior distributions of adjusted odds ratio
 Version: 0.1.0
-Author: Jinhui Yang(adopted from the Winbugs code first created by Haitao Chu et al.)
+Author: Jinhui Yang
 Maintainer: Jinhui Yang <yangj2@carleton.edu>
-Description: This package generates different posterior distributions of adjusted odds  
-    ratio under different priors of sensitivity and specificity, and plots the models side
-    by side for comparison. It also provides estimations for the specification of the 
-    models using historic data with a non-linear mixed effects model.  
+Description: This package generates different posterior distributions of adjusted odds 	ratio under different priors of sensitivity and specificity, and plots the models for comparison. It also provides estimations for the specifications of the models using diagnostics of exposure status with a non-linear mixed effects model.  
 License: GPL-2 
 Encoding: UTF-8
 LazyData: true
 Imports: 
-	dplyr,
-	ggplot2,
+    dplyr,
+    ggplot2,
     rstan (>= 2.16.2),
     lme4,
 Depends: 

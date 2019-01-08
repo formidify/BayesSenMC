@@ -50,9 +50,8 @@ nlme_nondiff <- function(data, lower = 0.5, upper = 1, id = FALSE, ...) {
                  " to prevent NaNs; see model specification for more details."))
   }
   
-  dat_final <- cbind(dat_final, as.numeric(dat_final$Se=='0'))
-  dat_final <- cbind(dat_final, 1 - as.numeric(dat_final$Se=='0'))
-  names(dat_final)[c(5, 6)] <- c("is_sp","is_se")
+  dat_final <- cbind(dat_final, as.numeric(dat_final$Se==0))
+  names(dat_final)[c(5)] <- c("Sp")
 
   user_logis <- function(a, b) {
     linkfun <- function(mu) log((mu - a) / (a + b - mu))
@@ -65,7 +64,7 @@ nlme_nondiff <- function(data, lower = 0.5, upper = 1, id = FALSE, ...) {
               class = "link-glm")
   }
   
-  mod <- glmer(cbind(Y, N - Y) ~ ((0 + is_sp + is_se) | sid) + Se, 
+  mod <- glmer(cbind(Y, N - Y) ~ ((0 + Se + Sp) | sid) + Se, 
                data = dat_final, family = binomial(link = user_logis(lower, upper)), ...)
   
   attributes(mod)$type <- "nondiff"
@@ -131,13 +130,12 @@ nlme_diff <- function(data, lower = 0.5, upper = 1, id = FALSE, ...) {
   }
   
   dat_final <- cbind(dat_final, as.numeric(dat_final$Se==0))
-  dat_final <- cbind(dat_final, 1 - as.numeric(dat_final$Se==0))
-  names(dat_final)[c(6, 7)] <- c("is_sp","is_se")
+  names(dat_final)[c(6)] <- c("Sp")
   
   
   dat_final <- cbind(dat_final, as.numeric(dat_final$group==0))
   dat_final <- cbind(dat_final, 1 - as.numeric(dat_final$group==0))
-  names(dat_final)[c(8, 9)] <- c("controls", "cases")
+  names(dat_final)[c(7, 8)] <- c("controls", "cases")
   
   user_logis <- function(a, b) {
     linkfun <- function(mu) log((mu - a) / (a + b - mu))
@@ -150,7 +148,7 @@ nlme_diff <- function(data, lower = 0.5, upper = 1, id = FALSE, ...) {
               class = "link-glm")
   }
   
-  mod <- glmer(cbind(Y, N-Y) ~ ((0 + cases + controls) | sid) + ((0 + is_se + is_sp) | sid) + Se + group, 
+  mod <- glmer(cbind(Y, N-Y) ~ ((0 + cases + controls) | sid) + ((0 + Se + Sp) | sid) + Se + cases, 
                data = dat_final, family = binomial(link = user_logis(lower, upper)), ...)
   
   attributes(mod)$type <- "diff"

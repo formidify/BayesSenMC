@@ -1,0 +1,416 @@
+\documentclass[nojss, shortnames]{jss}
+%\documentclass[article, shortnames]{jss}
+\usepackage{amsmath}
+\usepackage{float}
+
+%% need no \usepackage{Sweave.sty}
+%\usepackage{natbib}
+%\usepackage{/usr/lib/R/share/texmf/Sweave}
+%%\VignetteIndexEntry{BayesSenMC Illustrations}
+\SweaveOpts{keep.source=FALSE, height = 5, width = 7}
+
+\author{Jinhui Yang\\Carleton College \And 
+        Lifeng Lin\\Florida State University \And 
+        Haitao Chu\\University of Minnesota \\ at Twin Cities}
+\title{\pkg{BayesSenMC}: an \proglang{R} package for Bayesian Sensitivity Analysis of Misclassification}
+
+\Plainauthor{Jinhui Yang, Lifeng Lin, Haitao Chu} %% comma-separated
+\Plaintitle{BayesSenMC: an R package for Bayesian Sensitivity Analysis of Misclassification} %% without formatting
+
+%% an abstract and keywords
+\Abstract{
+In case - control studies, the odds ratio is commonly used to summarize the association between a binary exposure and a dichotomous outcome. However, exposure misclassification frequently appears in case-control studies due to inaccurate data reporting, which can produce bias in measures of association. In this article, we implement a Bayesian sensitivity analysis of misclassification to provide a full posterior inference on the corrected odds ratio under both non-differential and differential misclassification. We present an \proglang{R} \citep{R} package \pkg{BayesSenMC}, which provides user-friendly functions for its implementation. The usage is illustrated by a real data analysis on the association between bipolar disorder and rheumatoid arthritis.
+}
+\Keywords{Bayesian analysis, misclassification, odds ratio, sensitivity analysis, case-control study}
+\Plainkeywords{Bayesian analysis, generalized linear mixed effects, odds ratio, R, sensitivity analysis}
+\Address{
+Jinhui Yang\\
+Carleton College\\
+Northfield, MN, USA \\
+  E-mail: \email{yangj2@carleton.edu}
+}
+%% end of declarations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+%% include your article here, just as usual
+%% Note that you should use the \pkg{}, \proglang{} and \code{} commands.
+
+\section{Introduction} \label{Introduction}
+Many epidemiological studies are concerned with assessing the risk of an outcome between exposed and non-exposed subjects. For example, in a case-control study, researchers first identify subjects who have the disease of interest (the case group) and subjects who do not (the control group), and then ascertain the exposure status of the subjects in each group. The odds ratio is typically used to assess the association between the exposure and disease in the case--control study; it describes the ratio of the exposure odds in the case group to that in the control group.
+
+However, misclassification of exposure, disease outcome, or covariates appears frequently in observational studies of epidemiological or medical research \citep{Rothman2008, brakenhoff2018measurement}. In a case-control study, misclassification is often due to inaccurate reporting of the exposure status (e.g., self-reported data). This can consequently lead to biased exposure probabilities and odds ratio. To adjust for such biases, we can correct the odds ratio using the observed data from the case-control study and the sensitivity and specificity of correctly classifying exposure status from external data. Here, the sensitivity is the proportion of exposed subjects that are correctly classified as exposed (i.e., true positive), and the specificity is the proportion of non-exposed subjects that are correctly classified as non-exposed (i.e. true negative).
+
+Quantitative assessment of misclassification bias is necessary to estimate uncertainty in study results. There are many statistical methods for misclassification correction; nearly all of them use information that maps observed measurements to true values \citep{Greenland2005}. These methods include regression calibration and multiple imputation \citep{Rosner1989, Spiegelman2001, Cole2006}, in which the mapping is based on a validation study. Also, sensitivity analysis can be used to evaluate the effects of uncertainties on observed results \citep{Greenland1996, Lash2003, Chu2006}, in which the mapping may be based on prior information or expert opinion. However, when such information is lacking, researchers may over- or under-adjust for misclassification with an inaccurate guess, which may, in turn, produce a poor estimate \citep{Gustafson2006}.
+
+Moreover, despite the ubiquity of measurement error, these methods remain rarely used due to complexity of statistical approaches, especially the complexity of prior specifications as well as lack of software package \citep{Lash2003}. For example, in a random sample survey of 57 epidemiological studies \citep{Jurek2006}, the investigators found only one used quantitative corrections. Sensitivity analysis is simple but limited insofar as it does not provide formal interval estimates that combine uncertainty due to random error with misclassification. Several authors have addressed this deficiency by using probabilistic (Monte Carlo) sensitivity analyses \citep{Greenland2005}; for example, \cite{Fox2005} proposed a probabilistic sensitivity analysis of misclassified binary variables based on multiple imputation, and provided SAS code and Excel macro for the approach, which was later adopted and implemented in the \proglang{R} \citep{R} package \pkg{episensr} \citep{episensr}. Such methods can be viewed as means of summarizing over sensitivity analyses using a prior distribution \citep{Greenland2005}. 
+
+Other methods employ a Bayesian framework \citep{Greenland2005, Chu2006, MacLehose2012, Gustafson2006}. The Bayesian analysis is substantially different from conventional probabilistic sensitivity analysis and much more flexible for incorporating different types of priors; however, it is often computationally expensive and more difficult to conduct by general users without statistical background. \cite{Gustafson2006} accounted for the prior uncertainties of sensitivity and specificity in the evaluation of the results of a case-control study. \cite{MacLehose2012} compared Bayesian approach with probabilistic bias analysis based on a case--control study of congenital defects, concluding that the two approaches are mostly similar if using similar prior data admissibility as well as uniform priors on exposure probabilities.
+
+This article focuses on an \proglang{R} package correcting for exposure misclassification in a case-control study. Extending from the Bayesian approach introduced by \cite{Gustafson2006}, we implement the methods outlined in \cite{Chu2006}, which account for the correlation between the sensitivity and specificity in the model specification. The methods can be applied for both non-differential and differential misclassification; that is, the degree of misclassification can be the same across the case and control groups or distinctly different. Furthermore, we use the generalized linear mixed bivariate effects model introduced by \cite{Chu2010} to jointly model the sensitivity and specificity that may be informed by an external meta-analysis on the diagnostic accuracy of the exposure factor. 
+
+This article introduces the implementation of the methods for misclassification via our \proglang{R} \citep{R} package \pkg{BayesSenMC} (Bayesian sensitivity analysis by Monte Carlo sampling). The package is mainly implemented in \proglang{Stan}, an imperative probabilistic language, which uses Hamilton Monte Carlo (HMC), a form of Markov Chain Monte Carlo (MCMC) sampling. The article is organized as follows. Section~\ref{sec:example} gives an actual case--control study that can be used to illustrate the use of the package. Section~\ref{sec:Methods} introduces the specific models and methods to deal with misclassification. Section~\ref{sec:Implementation} outlines the implementations in \pkg{BayesSenMC}. Section~\ref{sec:Example} illustrates the capabilities of \pkg{BayesSenMC} using the illustrative case--control study and the meta-analysis data on the accuracy of bipolar disorder. Finally, Section~\ref{sec:Conclusion} concludes this paper with brief discussion.
+
+\section{An illustrative Example}
+\label{sec:example}
+
+This section presents an illustrative case-control study on the association between bipolar disorder and rheumatoid arthritis, originally investigated by \cite{Farhi2016}; this example will be used to demonstrate the implementation of the methods for misclassification. The exposure is bipolar disorder and the disease outcome is rheumatoid arthritis, which is a chronic autoimmune disorder that primarily affects joints and occurs in nearly 1\% of the population in developed countries \citep{mcinnes2017pathogenetic}. Table~\ref{table:RA} presents the data.
+
+\begin{table}[ht]
+	\centering
+    \caption{Counts of the case--control study of the association between bipolar disorder and rheumatoid arthritis.}
+	\begin{tabular}{c c c c}
+		\hline
+        &\multicolumn{2}{c}{Bipolar Disorder}& \\
+        \cline{2-3}
+		Rheumatoid arthritis & Exposed & Unexposed & Total \\
+		\hline
+		Case & 66 & 11,716 & 11,782 \\
+		Control & 243 & 57,730 & 57,973 \\
+		\hline
+	\end{tabular}
+	\label{table:RA}
+\end{table}
+
+The unadjusted odds ratio is 1.34 with the 95\% confidence interval (CI) (1.02, 1.76), indicating a significant association between rheumatoid arthritis and bipolar disorder. Of note, \cite{Farhi2016} acknowledged the limitation that ``lack of validation of the diagnosis of bipolar disorder in the subjects cannot be completely excluded''. For example, the bipolar disorder can be classified as type I, type II, etc.; it is especially difficulty to diagnose bipolar disorder type II \citep{phillips2013bipolar}.
+
+Assuming certain fixed values or prior distributions of sensitivity and specificity, we can use the method by \cite{Chu2006} to correct the odds ratio accounting for the exposure misclassification. The sensitivity and specificity may be either some tentative fixed values or random variables following some prior distributions.
+
+The prior distributions can be estimated from external evidence using a meta-analysis, e.g. using the Bayesian approach by \cite{Chu2010}. Section~\ref{sec:Methods} presents the details of these methods. This article uses the meta-analysis performed by \cite{Carvalho2015} to obtain the prior distributions of the sensitivity and specificity of classifying the exposure status of bipolar disorder. The meta-analysis contains three subgroups of screening detection instruments: bipolar spectrum diagnostic scale (8 studies with the sensitivity between 0.52 and 0.90 and the specificity between 0.51 and 0.97); hypomania checklist (17 studies with the sensitivity between 0.69 and 1.00 and the specificity between 0.36 and 0.98); and mood disorder questionnaire (30 studies with the sensitivity between 0.00 and 0.91 and the specificity between 0.47 and 1.00). The data set from the Clalit Health Services (the largest Health Maintenance Organization in Israel) used in \cite{Farhi2016} does not specify the exact screening detection instrument for identifying bipolar disorder; therefore, we will use all three subgroups' data (55 studies in total) in \cite{Carvalho2015} for our analysis on the sensitivity and specificity. A subset of the meta-analysis data is shown in Table \ref{table:meta}.
+
+\begin{table}[ht]
+	\centering
+    \caption{The meta-analysis on diagnosis accuracy of bipolar disorder performed by \cite{Carvalho2015}.}
+	\begin{tabular}{c c c c c}
+		\hline
+		Study & True & False & True & False \\
+        ID & positive & negative & negative & positive \\
+		\hline
+		1 & 81 & 9 & 444 & 427 \\
+		2 & 12 & 3 & 44 & 19 \\
+		3 & 74 & 26 & 97 & 3 \\
+        4 & 52 & 16 & 23 & 4 \\
+        5 & 228 & 113 & 18 & 4 \\
+        \vdots & \vdots & \vdots & \vdots & \vdots \\
+        55 & 63 & 6 & 32 & 13 \\
+        \hline
+	\end{tabular}
+	\label{table:meta}
+\end{table}
+
+According to their definitions, the study-specific sensitivity and specificity can be estimated as the number of true positives / (the number of true positives plus the number of  false negatives) and the number of  true negatives / (the number of true negatives plus the number of false positives). For example, study~1 gives the sensitivity 81/(81 + 9) = 0.90 and the specificity 444/(444 + 427) $\approx$ 0.51. The generalized linear mixed-effects model will be used to synthesize all 55 studies to estimate an overall sensitivity and specificity.
+
+\section{Methods}
+\label{sec:Methods}
+
+\subsection{Bayesian approach to correcting misclassification bias}
+\label{sec:orcorrected}
+
+Consider a case--control study and we are interested in the odds ratio from this study. Table~\ref{table:observed} presents the notation of the observed data. The odds ratio is estimated as
+\begin{equation*}
+	\widehat{\text{OR}} = \frac{ad}{bc}.
+\end{equation*}
+When the odds ratio is larger or smaller than 1, the exposure happens more or less likely in the case group, suggesting an association between the disease status and the exposure status. On the other hand, the odds ratio close to 1 suggests that the disease and the exposure are not associated.
+
+\begin{table}[ht]
+	\centering
+    \caption{Observed counts of a case--control study}
+	\begin{tabular}{c c c c}
+		\hline
+		Group & Exposed & Unexposed & Total \\
+		\hline
+		Case & $a$ & $b$ & $N_1$ \\
+		Control & $c$ & $d$ & $N_0$ \\
+		\hline
+	\end{tabular}
+	\label{table:observed}
+\end{table}
+
+Assume that the observed exposure probability is $P_k$, the true exposure probability is $\pi_k$, the sensitivity is $Se_k$ and the specificity is $Sp_k$ for group $k$ ($k$ = 1 for the case group and 0 for the control group) in the case--control study. Then, we can represent the observed exposure probability in terms of the true exposure probability, the sensitivity, and the specificity:
+\begin{align}
+\begin{split}
+	\label{eq:ObsExposed}
+	P_k & = \Prob(\text{observed $E$ in group }k)\\
+    & = \Prob(\text{observed $E$} \mid \text{true $E$ in group }k) \Prob(\text{true $E$ in group }k) \\
+    & \quad + \Prob(\text{observed $E$} \mid \text{true $\overline{E}$ in group }k) \Prob(\text{true $\overline{E}$ in group }k)\\
+    & = \pi_k {Se}_k + (1 - \pi_k)(1 - {Sp}_k),
+\end{split}
+\end{align}
+where $E$ denotes exposure and $\overline{E}$ denotes non-exposure. This yields
+\begin{equation*}
+\pi_k = (P_K + {Sp}_k - 1)/({Se}_k + {Sp}_k - 1).
+\end{equation*}
+Consequently, the misclassification-corrected odds ratio can be calculated as
+\begin{equation}
+	\label{eq:CorrectedOR}
+	\text{OR}_\text{c} = \frac{\pi_1 / (1 - \pi_1)}{\pi_0 / (1 - \pi_0)}
+	=\frac{(P_1+Sp_1-1)(Se_0-P_0)}{(P_0+Sp_0-1)(Se_1-P_1)}.
+\end{equation}
+
+Based on Equation~(\ref{eq:ObsExposed}), we can specify the following Bayesian hierarchical model to estimate the corrected odds ratio of the case--control study:
+\begin{align}
+\begin{split}
+\label{eq:bayes}
+\text{Likelihood:}& \quad a \sim Bin(N_1, P_1) \text{ and } c \sim Bin(N_0, P_0);\\
+\text{Link:}& \quad P_k = \pi_k {Se}_k + (1 - \pi_k) (1 - {Sp}_k), \quad k = 0, 1;\\
+& \quad \text{LOR}_\text{c} = \text{logit}(\pi_1) - \text{logit}(\pi_0) \text{ and } \text{OR}_\text{c} = \exp (\text{LOR}_\text{c});\\
+\text{Prior:}& \quad \text{logit}(\pi_0) \sim N(0, 10^2) \quad \text{and} \quad \text{LOR}_\text{c} \sim N(0, 2^2);\\
+& \quad {Se}_k, {Sp}_k \sim f(\cdot).
+\end{split}
+\end{align}
+Here, we assume weakly-informative priors for the true exposure probabilities $\pi_0$ and $\pi_1$, which give a 95\% CI of the true odds ratio between $e^{-2 \times 1.96}$ ($\approx$ 0.02) and $e^{2 \times 1.96}$ ($\approx$ 50.40), and a binomial distribution for the number of observed exposure in case and control studies. Thus, the Bayesian inference can be formulated as a posterior distribution of $\pi_0$, $\pi_1$, and the corrected odds ratio.
+
+Additionally, the function $f(\cdot)$ denotes the joint prior for the sensitivity and specificity (for either non-differential or different misclassification). In practice, the sensitivity and specificity are not available from the case-control study, and they may be estimated as certain fixed values by subjective experts' opinions. 
+
+Alternatively, we may consider incorporating evidence-based prior information from existing studies on the diagnostic accuracy of the exposure status (e.g., the data in Table~\ref{table:meta}). This permits us to account for uncertainties in the sensitivity and specificity and the potential correlation between them. Section~\ref{sec:prior} presents methods to obtain the prior information for the sensitivity and specificity from a meta-analysis.
+
+\subsection{Estimating prior distributions on the sensitivity and specificity from a meta-analysis}
+\label{sec:prior}
+
+This section briefly discusses the generalized linear mixed-effects model (GLMM) to estimate priors on the sensitivity and specificity. Suppose that a meta-analysis on the diagnostic accuracy of the exposure status is available as an external data to inform the priors of sensitivity and specificity that are needed to correct the odds ratio in the case-control study. Denote the number of independent studies in the meta-analysis as $m$, and let $n_{i11}$, $n_{i00}$, $n_{i01}$ and $n_{i10}$ be the number of true positives, true negatives, false positives, and false negatives, respectively, in study $i$ ($i = 1, \ldots, m$). Consequently, there are $n_{i11} + n_{i10}$ truly exposed subjects and $n_{i00} + n_{i01}$ truly unexposed subjects.
+
+Assuming that $n_{i11}$ and $n_{i00}$ are binomially distributed given the number of exposed and unexposed subjects, respectively, the bivariate GLMM can be specified as \citep{Chu2010, ma2016statistical}:
+\begin{align}
+\begin{split}
+\label{eq:glmm}
+& \quad n_{i11} \sim Bin(n_{i11} + n_{i10}, Se_i) \text{ and } n_{i00} \sim Bin(n_{i00} + n_{i01}, Sp_i), \quad i = 1, \ldots, m;\\
+& \quad g \left(\frac{Se_i - Se^L}{Se^U - Se^L}\right) = u + \mu_i \text{ and } g \left(\frac{Sp_i - Sp^L}{Sp^U - Sp^L}\right) = v + \nu_i;\\
+& \quad
+\begin{bmatrix}
+\mu_i\\
+\nu_i
+\end{bmatrix} \sim N \left(
+\begin{bmatrix}
+0\\
+0
+\end{bmatrix}
+,
+\begin{bmatrix}
+\sigma^2_\mu & \rho\sigma_\mu\sigma_\nu \\
+\rho\sigma_\mu\sigma_\nu & \sigma^2_\nu
+\end{bmatrix}
+\right),
+\end{split}
+\end{align}
+where $u$ and $v$ are the fixed effects implying the overall sensitivity and specificity in all $m$ studies, and $\mu_i$ and $\nu_i$ are the study-specific random effects. Also, $\sigma_\mu^2$ and $\sigma_\nu^2$ describe the heterogeneity of the underlying sensitivity and specificity across studies, and $\rho$ models the correlation between the sensitivity and specificity. We denote the estimated fixed effects as $\hat{u}$ and $\hat{v}$, the estimated variances as $\hat{\sigma}_\mu^2$ and $\hat{\sigma}_\nu^2$, and the estimated correlation coefficient as $\hat{\rho}$.
+
+The lower and upper bounds $Se^L$, $Se^U$, $Sp^L$, and $Sp^U$ provide constraints on sensitivity and specificity, which are chosen to exclude all improbable values. A smaller difference between $Se^L$ and $Se^U$ (or between $Sp^L$ and $Sp^U$) indicates higher confidence in the diagnostic accuracy of the exposure status. When there is no confidence for the range, can set $Se^L = Sp^L = 0$ and $Se^U = Sp^U = 1$. Alternatively, setting $Se^L = Sp^L = 0.5$ indicates that the diagnosis of exposure is better than chance. For simplicity of implementation, we only allow the same lower and upper bounds for $Se$ and for $Sp$ in our package \pkg{BayesSenMC}. In addition, $g(\cdot)$ is the link function (e.g., the logit, probit, and complementary log-log). The logit link, $\text{logit}(t) = \log \frac{t}{1 - t}$, is commonly used in practice, and our package \pkg{BayesSenMC} adopts this link.
+
+Recall that the Bayesian hierarchical model for estimating the corrected odds ratio in the case--control study in Equation~(\ref{eq:bayes}) specifies a joint prior $f(\cdot)$ for the sensitivity and specificity. We consider five specifications for this prior as follows:
+\begin{itemize}
+\item[(i)]{No misclassification. The specification of the prior is equivalent to setting $Se_0 = Se_1 = Sp_0 = Sp_1 = 1$; consequently, $P_1 = \pi_1$ and $P_0 = \pi_0$.}
+\item[(ii)]{Misclassification of the exposure status exists, and the sensitivity and specificity for both cases and controls are assumed to be fixed values. These fixed values can be directly plugged in the Bayesian model in Equation~(\ref{eq:bayes}).}
+\item[(iii)]{Non-differential misclassification of the exposure status exists ($Se_0 = Se_1 = Se$ and $Sp_0 = Sp_1 = Sp$), and the uncertainties of the sensitivity and specificity are considered independently by using normal priors on the logit scale. The evidence of the priors comes from the diagnostic meta-analysis performed in the GLMM in Equation~(\ref{eq:glmm}). Specifically, we can assign
+$$\text{logit}\left(\frac{Se - Se^L}{Se^U - Se^L}\right) \sim N(\hat{u}, \hat{\sigma}_{\mu}^2) \quad \text{and} \quad 
+\text{logit}\left(\frac{Sp - Sp^L}{Sp^U - Sp^L}\right) \sim N(\hat{v}, \hat{\sigma}_{\nu}^2)$$
+as the prior in the Bayesian hierarchical model for the case--control study in Equation~(\ref{eq:bayes}).}
+\item[(iv)]{Non-differential misclassification of the exposure status exists ($Se_0 = Se_1 = Se$ and $Sp_0 = Sp_1 = Sp$), and the sensitivity and specificity have a joint normal prior on the logit scale to account for their correlation. In practice, the sensitivity is very likely correlated with the specificity when dichotomizing a continuous measurement \citep{chu2006bivariate}. Specifically, we use the following bivariate joint prior
+$$\begin{bmatrix}
+\text{logit}\left(\frac{Se - Se^L}{Se^U - Se^L}\right) \\
+\text{logit}\left(\frac{Sp - Sp^L}{Sp^U - Sp^L}\right)
+\end{bmatrix}
+\sim
+N \left(
+\begin{bmatrix}
+\hat{u}\\
+\hat{v}
+\end{bmatrix}
+,
+\begin{bmatrix}
+\hat{\sigma}_{\mu}^2 & \hat{\rho} \hat{\sigma}_{\mu} \hat{\sigma}_{\nu}\\
+\hat{\rho} \hat{\sigma}_{\mu} \hat{\sigma}_{\nu} & \hat{\sigma}_{\nu}^2
+\end{bmatrix}
+\right).$$
+Compared with the previous prior specification with independent sensitivity and specificity, the correlation coefficient $\hat{\rho}$ is additionally considered here; it is also estimated from the GLMM in Equation~(\ref{eq:glmm}).}
+\item[(v)]{In addition to the above bivariate joint prior for the non-differential sensitivity and specificity, we can also consider modeling the uncertainties in the estimated correlation coefficient. We consider applying Fisher's $z$-transformation to the correlation coefficient in the GLMM. Specifically, instead of directly estimating the correlation coefficient $\rho$ in Equation~(\ref{eq:glmm}), we reparameterize $\rho = \frac{\exp (2z) - 1}{\exp (2z) + 1}$ and obtain the point estimate of $z$ from the GLMM and its standard error, denoted as $\hat{z}$ and $s_z$, respectively. These estimates can be subsequently used as the prior for the sensitivity and specificity in the case--control study:
+\begin{align*}
+\begin{split}
+\begin{bmatrix}
+\text{logit}\left(\frac{Se - Se^L}{Se^U - Se^L}\right) \\
+\text{logit}\left(\frac{Sp - Sp^L}{Sp^U - Sp^L}\right)
+\end{bmatrix}
+& \sim
+N \left(
+\begin{bmatrix}
+\hat{u}\\
+\hat{v}
+\end{bmatrix}
+,
+\begin{bmatrix}
+\hat{\sigma}_{\mu}^2 & \rho \hat{\sigma}_{\mu} \hat{\sigma}_{\nu}\\
+\rho \hat{\sigma}_{\mu} \hat{\sigma}_{\nu} & \hat{\sigma}_{\nu}^2
+\end{bmatrix}
+\right);\\
+\rho & = \frac{\exp (2z) - 1}{\exp (2z) + 1};\\
+z & \sim N(\hat{z}, s_z^2).
+\end{split}
+\end{align*}
+}
+\item[(vi)]{Finally, we consider the differential misclassification of the exposure status, i.e., $Se_0 \neq Se_1$ and $Sp_0 \neq Sp_1$. All above choices of prior can be similarly applied the four-variate set \{$Se_0$, $Sp_0$, $Se_1$, $Sp_1$\}. For simplicity, we consider a joint prior that is similar to that in (iv); however, the prior applies to cases and controls separately, and it does not account for the uncertainties in the correlation coefficient as in (v). That is,
+$$\begin{bmatrix}
+\text{logit}\left(\frac{Se_k - Se^L}{Se^U - Se^L}\right) \\
+\text{logit}\left(\frac{Sp_k - Sp^L}{Sp^U - Sp^L}\right)
+\end{bmatrix}
+\sim
+N \left(
+\begin{bmatrix}
+\hat{u}\\
+\hat{v}
+\end{bmatrix}
+,
+\begin{bmatrix}
+\hat{\sigma}_{\mu}^2 & \hat{\rho} \hat{\sigma}_{\mu} \hat{\sigma}_{\nu}\\
+\hat{\rho} \hat{\sigma}_{\mu} \hat{\sigma}_{\nu} & \hat{\sigma}_{\nu}^2
+\end{bmatrix}
+\right), \quad k = 0, 1.$$
+}
+\end{itemize}
+
+Because of the complexity of the Bayesian model in Equation~(\ref{eq:bayes}) with the above various choices of prior for the sensitivity and specificity, we will use Markov chain Monte Carlo (MCMC) sampling to produce the posterior distribution and thus estimate the misclassification-bias-corrected odds ratio in the case--control study and its credible interval.
+
+\section{Implementation}
+\label{sec:Implementation}
+
+The proposed methods in Section \ref{sec:Methods} have been implemented in the R package \pkg{BayesSenMC}. The function \code{nlmeNDiff} fits a non-differential GLMM and returns a \pkg{lme4} \citep{lme4} object, for which commands such as \code{summary} can be used to extract useful statistics from the model (see \code{methods(class = "merMod")} for more details). Users can also call the \code{paramEst} function to get a list of specific parameter estimates of the fit that can be directly inputted into the model functions of \pkg{BayesSenMC} for Bayesian inferences. In addition, the link function used in \code{nlmeNDiff} can be modified by specifying \code{lower} and \code{upper}, which then changes the lower and upper bounds of $Se_k$ and $Sp_k$ ($k = 1$ for cases and $0$ for controls).
+
+There are 6 model functions and 1 graphing function, \code{OR_hist}, in \pkg{BayesSenMC}. The model functions return an S4 object of type \code{stanfit}, an instance of \pkg{RStan} \citep{RStan}, which is an interface of \proglang{Stan} \cite{Stan} in \proglang{R}. Users can call methods such as \code{print} or \code{extract} to get further information about the posterior sample. All the MCMC procedures are implemented with default 2 chains, each with 1000 iterations of burn-in period and 2000 iterations to estimate the parameters. They are fit using \code{stan}, and the default Monte Carlo algorithm is the No-U-Turn sampler, a variant of Hamiltonian Monte Carlo \citep{Hoffman2014, Betancourt2017}. Any additional arguments to the model function call will be passed into \code{stan}. The returned object can then be inputted into \code{OR_hist} to visualize the posterior distribution of the adjusted odds ratio, plus the probability density lines of odds ratio in the cases of no misclassification and/or constant Se/Sp as a comparison to the posterior distribution. It takes optional argument passed into \code{geom_histogram}, and returns a \pkg{ggplot2} \citep{ggplot2} object that can be further customized.
+
+The source version of \pkg{BayesSenMC} is freely available from the \href{https://github.com/formidify/BayesSenMC}{Github repository}. The package can be directly installed via the \proglang{R} prompt:
+<<echo = FALSE, results = hide>>=
+options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE, fig.height = 5, fig.width = 7)
+@
+
+<<echo = TRUE, results = hide, eval = FALSE>>=
+install_github("formidify/BayesSenMC")
+@
+
+The analyses as well as the reproducible R script can be accessed with the following \proglang{R} prompts:
+<<echo = TRUE, results = hide, eval = FALSE>>=
+library("BayesSenMC")
+vignette("BayesSenMC_demo", package = "BayesSenMC")
+edit(vignette("BayesSenMC_demo", package = "BayesSenMC"))
+@
+
+\section{Example}
+\label{sec:Example}
+
+The data in Table \ref{table:RA} as well as Table \ref{table:meta} of meta analysis data on the diagnosis accuracy of bipolar disorder are used to demonstrate the capabilities of \pkg{BayesSenMC}. The analyses are conducted using \proglang{R} version 3.4.2 (2017-09-28). 
+
+We first fit the meta-analysis data using the GLMM procedure implemented in our package, assuming non-differential misclassification. Given the range of Se and Sp of the bipolar disorder meta data, we must only assume $Se^L = Sp^L = 0$ and $Se^U = Sp^U = 1$ in order for the GLMM to compute real-value results. However, with more information about the type of diagnoses in \cite{Farhi2016}, one can find more informed constraint on Se and Sp to fit a more precise model. 
+<<echo = TRUE, eval = TRUE>>=
+library("BayesSenMC")
+my.mod <- nlme_nondiff(bd_meta, lower = 0)
+@
+
+The indicator variable \code{Se} has a value of 1 for Se estimates, and 0 for Sp estimates. The random effects are grouped within each study, numbered after \code{sid}. 
+
+The fit has an Akaike Information Criterion (AIC) of 851.7, which can be used to compare across models. The logit means of Se and Sp are given by the fixed effects, 1.069 and 1.126, which translates to a sensitivity of 0.744 and a specificity of 0.755. The values, larger than 0.5, suggest that overall, the diagnostic accuracy for bipolar disorder given our meta-data is better than random, albeit nowhere near perfect. The standard deviations of logit Se and Sp are given by the random effects, as well as the correlation. All of the mentioned parameter estimates can be returned in a list by calling \code{paramEst}. 
+
+We then plug the parameter estimates to get posterior distributions for the corrected odds ratio given different priors of Se and Sp. We run all 6 different models with the case-control study observations in \cite{Farhi2016}, shown in Table \ref{table:RA}.
+
+<<echo = FALSE, eval = TRUE>>=
+# call library without showing the code
+library("BayesSenMC")
+@
+
+<<echo = TRUE, results = hide, eval = TRUE>>=
+# Model with no misclassification
+m.1 <- correctedOR(a = 66, N1 = 11782, c = 243, N0 = 57973, chains = 3, 
+iter = 10000)
+
+# Model with constant misclassification
+m.2 <- crudeOR(a = 66, N1 = 11782, c = 243, N0 = 57973, se = 0.744, sp = 0.755, 
+chains = 3, iter = 10000)
+
+# Model with logit bivariate transformed misclassification
+m.3 <- logitOR(a = 66, N1 = 11782, c = 243, N0 = 57973, m.lg.se = 1.069,
+m.lg.sp = 1.126, s.lg.se = 0.893, s.lg.sp = 0.712, chains = 3, iter = 10000)
+@
+
+\begin{figure}[H]
+\label{fig:trace}
+\centering
+<<echo = TRUE, results = hide, eval = TRUE, fig = TRUE>>=
+# Model with logit transformed misclassification w/ fixed correlation
+m.4 <- fixedCorrOR(a = 66, N1 = 11782, c = 243, N0 = 57973, m.lg.se = 1.069, 
+m.lg.sp = 1.126, s.lg.se = 0.893, s.lg.sp = 0.712, rho = -0.379, chains = 3, 
+iter = 10000)
+
+# Model with logit bivariate transformed misclassification 
+# plus Fisher Z transformed correlation
+m.5 <- randCorrOR(a = 66, N1 = 11782, c = 243, N0 = 57973, m.lg.se = 1.069, 
+m.lg.sp = 1.126, s.lg.se = 0.893, s.lg.sp = 0.712, m.z = -0.399, s.z = 0.139, 
+chains = 3, iter = 10000)
+
+# Model with logit four-variate transformed differential misclassification
+m.6 <- nonDiffOR(a = 66, N1 = 11782, c = 243, N0 = 57973, mu = c(1.069, 1.069, 1.126, 1.126),
+s.lg.se0 = 0.893, s.lg.se1 = 0.893, s.lg.sp0 = 0.712, s.lg.sp1 = 0.712, corr.sesp0 = -0.377, 
+corr.sesp1 = -0.377, corr.group = 0, chains = 3, iter = 10000, traceplot = TRUE)
+@
+\caption{Traceplot of 3 MCMC chains with 10,000 iterations for randomly correlated logit bivariate model}
+\end{figure}
+
+<<echo = FALSE, eval = TRUE>>=
+## extract summary statistics for adjusted odds ratio of the above models
+# each run generates slightly different estimates because of MCMC's inherent stochastic behavior, but the differences are minor for our analysis
+library(rstan)
+s.1 <- rstan::summary(m.1, pars = c("ORadj"))$summary
+s.2 <- rstan::summary(m.2, pars = c("ORadj"))$summary
+s.3 <- rstan::summary(m.3, pars = c("ORadj"))$summary
+s.4 <- rstan::summary(m.4, pars = c("ORadj"))$summary
+s.5 <- rstan::summary(m.5, pars = c("ORadj"))$summary
+s.6 <- rstan::summary(m.6, pars = c("ORadj"))$summary
+@
+
+Each model above is ran with 3 Markov chains, and each chain consists of 5000 burn-in samples and 10,000 iterations to estimate the parameters. The posterior mean, median and 95\% confidence limits of adjusted odds ratio are as below: $\Sexpr{round(s.1[1, 'mean'], 2)}(\Sexpr{round(s.1[1, 6], 2)}, \Sexpr{round(s.1[1, 4], 2)}, \Sexpr{round(s.1[1, 8], 2)})$, $\Sexpr{round(s.2[1, 'mean'], 2)}(\Sexpr{round(s.2[1, 6], 2)}, \Sexpr{round(s.2[1, 4], 2)}, \Sexpr{round(s.2[1, 8], 2)})$, $\Sexpr{round(s.3[1, 'mean'], 2)}(\Sexpr{round(s.3[1, 6], 2)}, \Sexpr{round(s.3[1, 4], 2)}, \Sexpr{round(s.3[1, 8], 2)})$, $\Sexpr{round(s.4[1, 'mean'], 2)}(\Sexpr{round(s.4[1, 6], 2)}, \Sexpr{round(s.4[1, 4], 2)}, \Sexpr{round(s.4[1, 8], 2)})$, $\Sexpr{round(s.5[1, 'mean'], 2)}(\Sexpr{round(s.5[1, 6], 2)}, \Sexpr{round(s.5[1, 4], 2)}, \Sexpr{round(s.5[1, 8], 2)})$, $\Sexpr{round(s.6[1, 'mean'], 2)}(\Sexpr{round(s.6[1, 6], 2)}, \Sexpr{round(s.6[1, 4], 2)}, \Sexpr{round(s.6[1, 8], 2)})$. One can also specify \code{traceplot = TRUE} to display a plot of sampled corrected log odds ratio values over iterations, such as in the above \code{nonDiffOR} method call.
+
+The above example demonstrates the significance of sensitivity and specificity in a case-control study. We can examine that by the ratio of upper to lower 95\% posterior interval: $\Sexpr{round(s.1[1, 8], 2)}/\Sexpr{round(s.1[1, 4], 2)} = \Sexpr{round(s.1[1, 8] / s.1[1, 4], 2)}$, $\Sexpr{round(s.2[1, 8], 2)}/\Sexpr{round(s.2[1, 4], 2)} = \Sexpr{round(s.2[1, 8] / s.2[1, 4], 2)}$, $\Sexpr{round(s.3[1, 8], 2)}/\Sexpr{round(s.3[1, 4], 2)} = \Sexpr{round(s.3[1, 8] / s.3[1, 4], 2)}$, $\Sexpr{round(s.4[1, 8], 2)}/\Sexpr{round(s.4[1, 4], 2)} = \Sexpr{round(s.4[1, 8] / s.4[1, 4], 2)}$, $\Sexpr{round(s.5[1, 8], 2)}/\Sexpr{round(s.5[1, 4], 2)} = \Sexpr{round(s.5[1, 8] / s.5[1, 4], 2)}$ and $\Sexpr{round(s.6[1, 8], 2)}/\Sexpr{round(s.6[1, 4], 2)} = \Sexpr{round(s.6[1, 8] / s.6[1, 4], 2)}$. The greatest jump happens when we assume misclassification in the case-control study, and it only increases slightly with more uncertainties in the model. The increase is especially significant in \cite{Farhi2016}, because as seen from the GLMM, the estimated mean Se and Sp are around only 0.75. 
+
+<<echo=true, eval=true>>=
+library(ggplot2)
+g1 <- OR_hist(m.1, a = 66, N1 = 11782, c = 243, N0 = 57973, se = 0.744,
+sp = 0.755, x.max = 3, y.max = 5, binwidth = 0.1) + ggtitle("(a)")
+@
+
+<<echo=false, eval=true>>=
+g2 <- OR_hist(m.2, a = 66, N1 = 11782, c = 243, N0 = 57973, se = 0.744,
+sp = 0.755, x.max = 3, y.max = 5, binwidth = 0.1) + ggtitle("(b)")
+
+g3 <- OR_hist(m.3, a = 66, N1 = 11782, c = 243, N0 = 57973, se = 0.744,
+sp = 0.755, x.max = 3, y.max = 5, binwidth = 0.1) + ggtitle("(c)")
+
+g4 <- OR_hist(m.4, a = 66, N1 = 11782, c = 243, N0 = 57973, se = 0.744,
+sp = 0.755, x.max = 3, y.max = 5, binwidth = 0.1) + ggtitle("(d)")
+
+g5 <- OR_hist(m.5, a = 66, N1 = 11782, c = 243, N0 = 57973, se = 0.744,
+sp = 0.755, x.max = 3, y.max = 5, binwidth = 0.1) + ggtitle("(e)")
+
+g6 <- OR_hist(m.6, a = 66, N1 = 11782, c = 243, N0 = 57973, se = 0.744,
+sp = 0.755, x.max = 3, y.max = 5, binwidth = 0.1) + ggtitle("(f)")
+@
+
+\begin{figure}[H]
+\label{fig:posterior}
+\centering
+<<echo = TRUE, eval = TRUE, fig = TRUE>>=
+# Also built g2, g3, g4, g5, g6 with OR_hist; the code will not be shown here
+library("gridExtra")
+grid.arrange(g1, g2, g3, g4, g5, g6, nrow = 2)
+@
+\caption{Visualization of Posterior Distributions of corrected odds ratio for all models. (a) no misclassification; (b) constant misclassification with $Se = 0.744$ and $Sp = 0.755$; (c) logit bivariate normal misclassification; (d) extends from (c) but with constant correlation between Se and Sp; (e) extends from (c) but with Fisher's Z transformed correlation; The solid and dotted line are the probability density lines of corrected and crude OR, respectively, assuming log-normality on odds ratio.}
+\end{figure}
+
+We also implement a graphing function, \code{OR_hist}, which takes input of a model built with one of the above methods, the observations of the same case-control study and the estimated Se and Sp from the GLMM. The method visualizes the posterior distribution of that model while also plotting the probability density line of adjusted odds ratio given no misclassification (corrected OR) and given constant misclassification as specified by \code{Se} and \code{Sp} (crude OR). It makes it easy for users to compare the current posterior distribution (especially for models with more uncertainty) with more certain models to visualize the effect of misclassification in a case-control study. In addition, the lines serve as references when comparing across models. The plots and relevant codes are shown in Figure 2. 
+
+According to the plot, we observe a drastic change to the posterior distribution after taking non-perfect Se and Sp into account. Then, we observe slightly more uniform distributions as there is more uncertainty in the model. What is also worth noting is that in part (b) of the plot, the posterior density and MCMC sampling do not share the same shape, even though both assume non-perfect constant Se and Sp. This may be a result of low Se and Sp values, which may affect the log-normality assumption in the MCMC posterior samples.
+
+We now show the effects of number of iterations and chains on the computing speed of our models. For example, \code{randCorrOR}, which is presumably one of the most complex and time-consuming models to compute, takes about 11.04 seconds to run 3 chains with 5000 warm-up periods and 10,000 iterations each. In comparison, it takes about 3.21 seconds to compute 2 chains with 1000 warm-up periods and 2000 iterations each. In practice, higher number of MCMC chains and iterations results in more stable and accurate results, but the trade-off between the two can be significant depending on the model. Furthermore, we find that models, such as provided by \code{randCorrOR}, have smaller target posterior distribution regions in a MCMC chain, thus rendering it easy for the algorithm to miss the true distribution and thus result in "divergent transitions", which may return biased estimates. Increasing the value of \code{adapt_delta} parameter up to 1 (default is 0.99 in our implementation) by including it in the \code{control} argument of the methods can effectively force \pkg{RStan} \citep{RStan} to take smaller steps to approach the target; however, it may dramatically increase the modeling speed of MCMC chains. 
+
+\section{Conclusion}
+\label{sec:Conclusion}
+
+In this paper, we introduced and implemented the methods for making posterior inferences on the corrected odds ratio by modeling the uncertainty on both differential and non-differential misclassification through appropriate prior distributions. The specific implementation is publicly available using the \proglang{R} package \pkg{BayesSenMC}. The process can be divided into parts. First, one can use the GLMM model with binomial-logit link to estimate prior information on Se and Sp via a meta-analysis on the misclassification of exposure status. Second, the estimates can be plugged into the modeling functions to provide inferences for the corrected odds ratio. The models can also be visualized side-by-side for better comparisons. The validity of the analyses depends highly on the relevance of meta-analysis, in which irrelevant studies may skew the prior estimates of Se and Sp significantly, and consequentially, the corrected odds ratio. In addition, our models assume normal and independent priors on true exposure probabilities, which may be limiting in some cases \citep{Chu2006}. 
+
+\bibliography{BayesSenMC_demo.bib}
+
+\end{document}
