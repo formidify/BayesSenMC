@@ -281,7 +281,8 @@ options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE, fi
 @
 
 <<echo = TRUE, results = hide, eval = FALSE>>=
-install_github("formidify/BayesSenMC")
+library("devtools")
+devtools::install_github("formidify/BayesSenMC", build = TRUE, build_opts = c("--no-resave-data", "--no-manual"))
 @
 
 The analyses as well as the reproducible R script can be accessed with the following \proglang{R} prompts:
