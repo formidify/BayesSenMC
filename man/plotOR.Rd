@@ -65,4 +65,7 @@ seed = 0)
 
 my.plot <- plotOR(my.mod, a = 66, N1 = 11782, c = 243, N0 = 57973, se = 0.744,
 sp = 0.755, x.max = 3, y.max = 5, binwidth = 0.1) + ggtitle("Model with random correlation")
+
+# the user can also directly extract the data from a stanfit object using the following
+my.data <- as.data.frame(my.mod)
 }
